@@ -1,10 +1,11 @@
 import { createBrowserRouter } from 'react-router-dom'
+import Login from '../pages/Login'
 import Placeholder from '../components/Placeholder'
 
 const router = createBrowserRouter([
   {
     path: '/login',
-    element: <Placeholder title="登录" />,
+    element: <Login />,
   },
   {
     path: '/manage',
