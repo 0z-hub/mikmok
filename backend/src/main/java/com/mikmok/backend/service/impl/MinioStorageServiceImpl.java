@@ -6,6 +6,7 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
+import io.minio.SetBucketPolicyArgs;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,30 @@ public class MinioStorageServiceImpl implements FileStorageService {
             } else {
                 log.info("MinIO bucket '{}' already exists", bucketName);
             }
+
+            // 无论桶是否新创建，都确保设置公共读策略
+            String policy = "{\n" +
+                    "  \"Version\": \"2012-10-17\",\n" +
+                    "  \"Statement\": [\n" +
+                    "    {\n" +
+                    "      \"Effect\": \"Allow\",\n" +
+                    "      \"Principal\": {\"AWS\": [\"*\"]},\n" +
+                    "      \"Action\": [\"s3:GetBucketLocation\", \"s3:ListBucket\"],\n" +
+                    "      \"Resource\": [\"arn:aws:s3:::" + bucketName + "\"]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"Effect\": \"Allow\",\n" +
+                    "      \"Principal\": {\"AWS\": [\"*\"]},\n" +
+                    "      \"Action\": [\"s3:GetObject\"],\n" +
+                    "      \"Resource\": [\"arn:aws:s3:::" + bucketName + "/*\"]\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+            minioClient.setBucketPolicy(SetBucketPolicyArgs.builder()
+                    .bucket(bucketName)
+                    .config(policy)
+                    .build());
+            log.info("MinIO bucket '{}' policy ensured to be public-read", bucketName);
         } catch (Exception e) {
             log.error("Failed to initialize MinIO bucket: {}", bucketName, e);
             throw new RuntimeException("Failed to initialize MinIO bucket", e);
