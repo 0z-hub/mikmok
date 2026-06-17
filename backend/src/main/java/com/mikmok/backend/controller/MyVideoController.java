@@ -1,65 +1,68 @@
 package com.mikmok.backend.controller;
 
+import com.mikmok.backend.common.Result;
+import com.mikmok.backend.dto.PageResult;
+import com.mikmok.backend.dto.VideoVo;
+import com.mikmok.backend.entity.User;
 import com.mikmok.backend.entity.Video;
+import com.mikmok.backend.repository.UserRepository;
 import com.mikmok.backend.service.VideoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/my/videos")
 @RequiredArgsConstructor
 public class MyVideoController {
     private final VideoService videoService;
+    private final UserRepository userRepository;
 
     private Long getCurrentUserId() {
-        // 从 SecurityContext 获取我们在 JwtAuthenticationFilter 中存入的 userId
         return (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
     @PostMapping
-    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file, @RequestParam("title") String title) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public Result<Map<String, Long>> upload(@RequestParam("file") MultipartFile file, @RequestParam("title") String title) {
         Long userId = getCurrentUserId();
         Video video = videoService.uploadVideo(userId, title, file);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 201);
-        response.put("message", "发布成功");
-        response.put("data", Map.of("id", video.getId()));
-
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return Result.success(201, "发布成功", Map.of("id", video.getId()));
     }
 
     @GetMapping
-    public ResponseEntity<?> list(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
+    public Result<PageResult<VideoVo>> list(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
         Long userId = getCurrentUserId();
         Page<Video> videos = videoService.getMyVideos(userId, page, size);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("data", Map.of(
-            "total", videos.getTotalElements(),
-            "list", videos.getContent()
-        ));
+        User user = userRepository.findById(userId).orElseThrow();
 
-        return ResponseEntity.ok(response);
+        List<VideoVo> voList = videos.getContent().stream().map(v -> VideoVo.builder()
+                .id(v.getId())
+                .title(v.getTitle())
+                .videoUrl(v.getVideoUrl())
+                .authorName(user.getUsername())
+                .likeCount(v.getLikeCount().longValue())
+                .isLiked(false) // 个人列表暂不处理点赞状态，或根据需求扩展
+                .fileSize(v.getFileSize())
+                .contentType(v.getContentType())
+                .createdAt(v.getCreatedAt())
+                .build()
+        ).collect(Collectors.toList());
+
+        return Result.success(PageResult.of(videos.getTotalElements(), voList));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         Long userId = getCurrentUserId();
         videoService.deleteVideo(userId, id);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "删除成功");
-
-        return ResponseEntity.ok(response);
+        return Result.success("删除成功", null);
     }
 }
