@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import Login from '../pages/Login'
+import Manage from '../pages/Manage'
 import Publish from '../pages/Publish'
-import Placeholder from '../components/Placeholder'
 
 const router = createBrowserRouter([
   {
@@ -10,7 +10,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/manage',
-    element: <Placeholder title="管理" />,
+    element: <Manage />,
   },
   {
     path: '/publish',
