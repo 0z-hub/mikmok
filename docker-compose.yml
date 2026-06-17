@@ -7,10 +7,13 @@ services:
   # 后端服务
   backend:
     image: ${DOCKER_REGISTRY:-docker.io}/library/maven:3.9.6-eclipse-temurin-17-alpine
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
     container_name: mikmok-backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - ~/.m2:/root/.m2 # 挂载本地 maven 仓库加速
+    # 开发模式直接使用 maven 运行源码
+    command: mvn spring-boot:run -Dspring-boot.run.profiles=dev
     ports:
       - "8080:8080"
     environment:
@@ -23,18 +26,19 @@ services:
       - MINIO_ENDPOINT=http://${SERVER_IP}:9000
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
-    depends_on:
-      - frontend # 确保网络连通，虽然基础设施在云端
 
   # 前端服务
   frontend:
     image: ${DOCKER_REGISTRY:-docker.io}/library/node:20-alpine
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
     container_name: mikmok-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # 匿名卷，防止本地 node_modules 覆盖容器内的
+    # 开发模式使用 node 镜像运行 npm
+    command: sh -c "npm install && npm run dev -- --host"
     ports:
-      - "3000:3000"
+      - "5173:5173"
     environment:
       - VITE_API_BASE_URL=http://localhost:8080/api
     stdin_open: true
