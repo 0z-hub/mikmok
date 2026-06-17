@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Card, Form, Input, Upload, Button, message } from 'antd'
 import request from '../utils/request'
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024
+const MAX_FILE_SIZE = 50 * 1024 * 1024
 const MOCK_DEBUG_TOKEN = 'mock-token-for-debug'
 
 export default function Publish() {
@@ -13,7 +13,7 @@ export default function Publish() {
 
   const beforeUpload = (file) => {
     if (file.size > MAX_FILE_SIZE) {
-      message.error('视频文件不能超过 100MB')
+      message.error('视频文件不能超过 50MB')
       return Upload.LIST_IGNORE
     }
     return false
@@ -28,9 +28,6 @@ export default function Publish() {
 
     const formData = new FormData()
     formData.append('title', values.title)
-    if (values.description) {
-      formData.append('description', values.description)
-    }
     formData.append('file', file)
 
     setLoading(true)
@@ -45,7 +42,7 @@ export default function Publish() {
     }
 
     try {
-      await request.post('/api/video/upload', formData)
+      await request.post('/api/my/videos', formData, { timeout: 120000 })
       message.success('上传成功')
       navigate('/manage')
     } catch {

@@ -14,7 +14,7 @@ export default function Login() {
   const handleLogin = async (values) => {
     setLoginLoading(true)
     try {
-      const res = await request.post('/api/user/login', {
+      const res = await request.post('/api/auth/login', {
         username: values.username,
         password: values.password,
       })
@@ -43,7 +43,7 @@ export default function Login() {
   const handleRegister = async (values) => {
     setRegisterLoading(true)
     try {
-      await request.post('/api/user/register', {
+      await request.post('/api/auth/register', {
         username: values.username,
         password: values.password,
       })

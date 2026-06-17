@@ -56,11 +56,11 @@ export default function Manage() {
         return
       }
 
-      const res = await request.get('/api/video/my-list', {
+      const res = await request.get('/api/my/videos', {
         params: { page: currentPage, size: PAGE_SIZE },
       })
       setList(res.data?.list || [])
-      setTotal(res.data?.total || 0)
+      setTotal(Number(res.data?.total) || 0)
     } catch {
       // 错误信息由 request 拦截器统一处理
     } finally {
@@ -74,7 +74,7 @@ export default function Manage() {
 
   const handleDelete = async (videoId) => {
     try {
-      await request.delete(`/api/video/${videoId}`)
+      await request.delete(`/api/my/videos/${videoId}`)
       message.success('删除成功')
       const isLastItemOnPage = list.length === 1
       const nextPage = isLastItemOnPage && page > 1 ? page - 1 : page
@@ -138,9 +138,9 @@ export default function Manage() {
     },
     {
       title: '发布时间',
-      dataIndex: 'createTime',
+      dataIndex: 'createdAt',
       width: 180,
-      render: (createTime) => formatTime(createTime),
+      render: (_, record) => formatTime(record.createdAt || record.createTime),
     },
     {
       title: '点赞数',

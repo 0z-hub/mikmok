@@ -5,6 +5,7 @@ import {
   UploadOutlined,
   LogoutOutlined,
 } from '@ant-design/icons'
+import request from '../utils/request'
 
 const { Header, Sider, Content } = Layout
 
@@ -36,7 +37,14 @@ export default function MainLayout() {
     menuItems.find((item) => location.pathname.startsWith(item.key))?.key ||
     '/manage'
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (localStorage.getItem('token') !== 'mock-token-for-debug') {
+      try {
+        await request.post('/api/auth/logout')
+      } catch {
+        // 退出接口失败时仍清除本地登录态
+      }
+    }
     localStorage.removeItem('token')
     localStorage.removeItem('username')
     message.success('已退出')
