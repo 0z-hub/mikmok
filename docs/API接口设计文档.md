@@ -116,7 +116,7 @@
 
 ---
 
-## 3. 个人视频管理模块 (My Videos)
+## 3. 个人视频 management 模块 (My Videos)
 
 ### 3.1 发布视频
 *   **URL**: `/api/my/videos`
@@ -153,6 +153,8 @@
             "id": 102,
             "title": "我的视频",
             "videoUrl": "...",
+            "fileSize": 1048576,
+            "contentType": "video/mp4",
             "likeCount": 10,
             "createdAt": "2026-06-17T12:00:00"
           }

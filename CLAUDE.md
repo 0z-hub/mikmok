@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Development Principles
+- **Strict Adherence to Docs**: Always follow the requirements, technical design, and API specifications in the `docs/` directory.
+- **No Scope Creep**: Do not implement any features or functionality not explicitly defined in the requirements document (`docs/需求文档.md`).
+- **Implementation Consistency**: Ensure code implementation matches the technical design and API definitions exactly.
+
 ## Project Overview
 MikMok is a short-video sharing and recommendation platform similar to TikTok. It features full-screen snap-scroll video browsing, heat-based recommendations (likes), personal video management, and an admin monitoring dashboard.
 
