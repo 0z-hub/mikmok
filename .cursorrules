@@ -1,0 +1,9 @@
+# Cursor Project Rules
+
+All development in this repository must adhere to the guidelines specified in [CLAUDE.md](./CLAUDE.md).
+
+## Core Instructions
+- **Architecture**: See `CLAUDE.md` for the high-level architecture and tech stack.
+- **Commands**: Use the Docker-based commands listed in `CLAUDE.md`.
+- **Environment**: Infrastructure is pre-provided; use `.env` for connectivity.
+- **Documentation**: Refer to the `docs/` folder for detailed specs and API definitions.

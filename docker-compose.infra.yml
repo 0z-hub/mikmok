@@ -1,0 +1,42 @@
+# 基础设施配置文件 - 部署在云服务器上
+# 启动前请确保本地存在 .env 文件并填写了相关密码
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: mikmok-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: mikmok-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+
+  minio:
+    image: minio/minio
+    container_name: mikmok-minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./data/minio:/data
+    command: server /data --console-address ":9001"

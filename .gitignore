@@ -1,0 +1,26 @@
+# IDE & Tools
+.claude/
+.cursor/
+.vscode/
+
+# Environment
+.env
+.env.local
+
+# Build & Dependencies
+target/
+node_modules/
+dist/
+build/
+*.class
+*.jar
+*.war
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project Specific
+docs/superpowers/
+data/
+logs/
