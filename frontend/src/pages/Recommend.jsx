@@ -150,36 +150,55 @@ export default function Recommend() {
     }
   }, [videos.length, loading])
 
-  if (videos.length === 0 && loading) {
+  // 底部 TabBar 公共组件
+  const tabBar = (
+    <nav className="recommend-tabbar">
+      <div
+        className={`rec-tab-item ${location.pathname === '/recommend' || location.pathname === '/' ? 'active' : ''}`}
+        onClick={() => navigate('/recommend')}
+      >
+        <PlayCircleOutlined className="rec-tab-icon" />
+        <span className="rec-tab-label">推荐</span>
+      </div>
+      <div
+        className="rec-tab-item rec-tab-publish"
+        onClick={() => navigate('/publish')}
+      >
+        <PlusCircleFilled className="rec-tab-icon" />
+        <span className="rec-tab-label">发布</span>
+      </div>
+      <div
+        className="rec-tab-item"
+        onClick={() => navigate('/manage')}
+      >
+        <VideoCameraOutlined className="rec-tab-icon" />
+        <span className="rec-tab-label">我的</span>
+      </div>
+    </nav>
+  )
+
+  const renderContent = () => {
+    if (videos.length === 0 && loading) {
+      return (
+        <div className="recommend-loading">
+          <div className="loading-spinner" />
+          <p>加载推荐视频中...</p>
+        </div>
+      )
+    }
+
+    if (videos.length === 0 && !loading) {
+      return (
+        <div className="recommend-empty">
+          <p>暂无推荐视频</p>
+          <Button type="primary" onClick={() => navigate('/publish')}>
+            去发布第一个视频
+          </Button>
+        </div>
+      )
+    }
+
     return (
-      <div className="recommend-loading">
-        <div className="loading-spinner" />
-        <p>加载推荐视频中...</p>
-      </div>
-    )
-  }
-
-  if (videos.length === 0 && !loading) {
-    return (
-      <div className="recommend-empty">
-        <p>暂无推荐视频</p>
-        <Button type="primary" onClick={() => navigate('/publish')}>
-          去发布第一个视频
-        </Button>
-      </div>
-    )
-  }
-
-  return (
-    <div className="recommend-page">
-      {/* 顶部导航 */}
-      <div className="recommend-topbar">
-        <span className="topbar-brand" onClick={() => navigate('/recommend')}>
-          MikMok
-        </span>
-      </div>
-
-      {/* 全屏滚动容器 */}
       <div
         className="snap-container"
         ref={containerRef}
@@ -262,31 +281,19 @@ export default function Recommend() {
           </div>
         )}
       </div>
+    )
+  }
 
-      {/* 底部 TabBar */}
-      <nav className="recommend-tabbar">
-        <div
-          className={`rec-tab-item ${location.pathname === '/recommend' || location.pathname === '/' ? 'active' : ''}`}
-          onClick={() => navigate('/recommend')}
-        >
-          <PlayCircleOutlined className="rec-tab-icon" />
-          <span className="rec-tab-label">推荐</span>
-        </div>
-        <div
-          className="rec-tab-item rec-tab-publish"
-          onClick={() => navigate('/publish')}
-        >
-          <PlusCircleFilled className="rec-tab-icon" />
-          <span className="rec-tab-label">发布</span>
-        </div>
-        <div
-          className="rec-tab-item"
-          onClick={() => navigate('/manage')}
-        >
-          <VideoCameraOutlined className="rec-tab-icon" />
-          <span className="rec-tab-label">我的</span>
-        </div>
-      </nav>
+  return (
+    <div className="recommend-page">
+      <div className="recommend-topbar">
+        <span className="topbar-brand" onClick={() => navigate('/recommend')}>
+          MikMok
+        </span>
+      </div>
+
+      {renderContent()}
+      {tabBar}
     </div>
   )
 }
