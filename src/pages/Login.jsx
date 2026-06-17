@@ -34,6 +34,12 @@ export default function Login() {
     }
   }
 
+  const handleDebugLogin = () => {
+    localStorage.setItem('token', 'mock-token-for-debug')
+    localStorage.setItem('username', '调试用户')
+    navigate('/manage')
+  }
+
   const handleRegister = async (values) => {
     setRegisterLoading(true)
     try {
@@ -141,6 +147,11 @@ export default function Login() {
     >
       <Card title="欢迎" style={{ width: 400 }}>
         <Tabs activeKey={activeKey} onChange={setActiveKey} items={tabItems} />
+        <div style={{ textAlign: 'center', marginTop: 8 }}>
+          <Button type="link" onClick={handleDebugLogin}>
+            🚀 调试模式（跳过登录）
+          </Button>
+        </div>
       </Card>
     </div>
   )

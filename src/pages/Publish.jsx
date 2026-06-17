@@ -4,6 +4,7 @@ import { Card, Form, Input, Upload, Button, message } from 'antd'
 import request from '../utils/request'
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024
+const MOCK_DEBUG_TOKEN = 'mock-token-for-debug'
 
 export default function Publish() {
   const navigate = useNavigate()
@@ -33,6 +34,16 @@ export default function Publish() {
     formData.append('file', file)
 
     setLoading(true)
+
+    if (localStorage.getItem('token') === MOCK_DEBUG_TOKEN) {
+      setTimeout(() => {
+        message.success('模拟发布成功！')
+        navigate('/manage')
+        setLoading(false)
+      }, 1000)
+      return
+    }
+
     try {
       await request.post('/api/video/upload', formData)
       message.success('上传成功')
