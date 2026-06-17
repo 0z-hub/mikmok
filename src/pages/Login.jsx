@@ -21,6 +21,7 @@ export default function Login() {
       const token = res.data?.token
       if (token) {
         localStorage.setItem('token', token)
+        localStorage.setItem('username', res.data?.username || values.username)
         message.success('登录成功')
         navigate('/manage')
       } else {

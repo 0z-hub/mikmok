@@ -141,13 +141,7 @@ export default function Manage() {
   ]
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#f0f2f5',
-        padding: 24,
-      }}
-    >
+    <>
       <div
         style={{
           display: 'flex',
@@ -181,6 +175,6 @@ export default function Manage() {
           }}
         />
       </Card>
-    </div>
+    </>
   )
 }

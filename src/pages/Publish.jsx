@@ -45,17 +45,8 @@ export default function Publish() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f0f2f5',
-        padding: 24,
-      }}
-    >
-      <Card title="发布视频" style={{ width: 560 }}>
+    <div style={{ maxWidth: 560, margin: '0 auto' }}>
+      <Card title="发布视频">
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             label="视频标题"
