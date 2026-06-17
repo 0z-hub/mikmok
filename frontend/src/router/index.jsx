@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter } from 'react-router-dom'
 import Login from '../pages/Login'
 import Manage from '../pages/Manage'
 import Publish from '../pages/Publish'
@@ -16,7 +16,11 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/recommend" replace />,
+        element: <Recommend />,
+      },
+      {
+        path: 'recommend',
+        element: <Recommend />,
       },
       {
         path: 'manage',
@@ -27,10 +31,6 @@ const router = createBrowserRouter([
         element: <Publish />,
       },
     ],
-  },
-  {
-    path: '/recommend',
-    element: <Recommend />,
   },
 ])
 

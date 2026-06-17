@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Form, Input, Button, Tabs, message } from 'antd'
+import { Form, Input, Button, Tabs, message } from 'antd'
+import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import request from '../utils/request'
 
 export default function Login() {
@@ -34,12 +35,6 @@ export default function Login() {
     }
   }
 
-  const handleDebugLogin = () => {
-    localStorage.setItem('token', 'mock-token-for-debug')
-    localStorage.setItem('username', '调试用户')
-    navigate('/recommend')
-  }
-
   const handleRegister = async (values) => {
     setRegisterLoading(true)
     try {
@@ -62,23 +57,35 @@ export default function Login() {
       key: 'login',
       label: '登录',
       children: (
-        <Form form={loginForm} layout="vertical" onFinish={handleLogin}>
+        <Form form={loginForm} layout="vertical" onFinish={handleLogin} requiredMark={false}>
           <Form.Item
-            label="用户名"
             name="username"
             rules={[{ required: true, message: '请输入用户名' }]}
           >
-            <Input placeholder="请输入用户名" />
+            <Input
+              prefix={<UserOutlined className="text-white/20" />}
+              placeholder="用户名"
+              className="!bg-white/5 !border-white/10 !text-white placeholder:!text-white/20 h-12 !rounded-xl focus:!border-primary"
+            />
           </Form.Item>
           <Form.Item
-            label="密码"
             name="password"
             rules={[{ required: true, message: '请输入密码' }]}
           >
-            <Input.Password placeholder="请输入密码" />
+            <Input.Password
+              prefix={<LockOutlined className="text-white/20" />}
+              placeholder="密码"
+              className="!bg-white/5 !border-white/10 !text-white placeholder:!text-white/20 h-12 !rounded-xl focus:!border-primary"
+            />
           </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loginLoading}>
+          <Form.Item className="mb-0">
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              loading={loginLoading}
+              className="h-12 !rounded-xl font-bold text-base shadow-lg shadow-primary/20"
+            >
               登录
             </Button>
           </Form.Item>
@@ -89,26 +96,31 @@ export default function Login() {
       key: 'register',
       label: '注册',
       children: (
-        <Form form={registerForm} layout="vertical" onFinish={handleRegister}>
+        <Form form={registerForm} layout="vertical" onFinish={handleRegister} requiredMark={false}>
           <Form.Item
-            label="用户名"
             name="username"
             rules={[{ required: true, message: '请输入用户名' }]}
           >
-            <Input placeholder="请输入用户名" />
+            <Input
+              prefix={<UserOutlined className="text-white/20" />}
+              placeholder="用户名"
+              className="!bg-white/5 !border-white/10 !text-white placeholder:!text-white/20 h-12 !rounded-xl focus:!border-primary"
+            />
           </Form.Item>
           <Form.Item
-            label="密码"
             name="password"
             rules={[
               { required: true, message: '请输入密码' },
               { min: 6, message: '密码至少 6 位' },
             ]}
           >
-            <Input.Password placeholder="请输入密码" />
+            <Input.Password
+              prefix={<LockOutlined className="text-white/20" />}
+              placeholder="密码"
+              className="!bg-white/5 !border-white/10 !text-white placeholder:!text-white/20 h-12 !rounded-xl focus:!border-primary"
+            />
           </Form.Item>
           <Form.Item
-            label="确认密码"
             name="confirmPassword"
             dependencies={['password']}
             rules={[
@@ -123,10 +135,20 @@ export default function Login() {
               }),
             ]}
           >
-            <Input.Password placeholder="请再次输入密码" />
+            <Input.Password
+              prefix={<LockOutlined className="text-white/20" />}
+              placeholder="确认密码"
+              className="!bg-white/5 !border-white/10 !text-white placeholder:!text-white/20 h-12 !rounded-xl focus:!border-primary"
+            />
           </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={registerLoading}>
+          <Form.Item className="mb-0">
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              loading={registerLoading}
+              className="h-12 !rounded-xl font-bold text-base shadow-lg shadow-primary/20"
+            >
               注册
             </Button>
           </Form.Item>
@@ -136,33 +158,34 @@ export default function Login() {
   ]
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        minHeight: '100dvh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f0f2f5',
-        padding: 16,
-      }}
-    >
-      <Card
-        title="欢迎"
-        style={{
-          width: '100%',
-          maxWidth: 400,
-          borderRadius: 12,
-          boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
-        }}
-      >
-        <Tabs activeKey={activeKey} onChange={setActiveKey} items={tabItems} />
-        <div style={{ textAlign: 'center', marginTop: 8 }}>
-          <Button type="link" onClick={handleDebugLogin}>
-            🚀 调试模式（跳过登录）
-          </Button>
+    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center bg-black p-6 relative overflow-hidden max-w-[500px] mx-auto border-x border-white/10 shadow-2xl">
+      {/* 背景装饰 */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full"></div>
+
+      <div className="w-full max-w-sm z-10">
+        <div className="text-center mb-10">
+          <h1 className="text-5xl font-black italic tracking-tighter text-primary mb-2 drop-shadow-2xl">MikMok</h1>
+          <p className="text-white/40 tracking-widest text-xs uppercase">Short Video Platform</p>
         </div>
-      </Card>
+
+        <div className="bg-card-bg/50 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
+          <Tabs
+            activeKey={activeKey}
+            onChange={setActiveKey}
+            items={tabItems}
+            centered
+            className="dark-tabs"
+          />
+        </div>
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .dark-tabs .ant-tabs-nav::before { border-bottom: 1px solid rgba(255,255,255,0.05) !important; }
+        .dark-tabs .ant-tabs-tab { color: rgba(255,255,255,0.4) !important; }
+        .dark-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { color: #fff !important; font-weight: bold !important; }
+        .dark-tabs .ant-tabs-ink-bar { background: #FE2C55 !important; }
+      `}} />
     </div>
   )
 }

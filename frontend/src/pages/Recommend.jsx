@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { Button, message } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import { message } from 'antd'
 import {
   HeartOutlined,
   HeartFilled,
-  VideoCameraOutlined,
-  PlayCircleOutlined,
   PlusCircleFilled,
 } from '@ant-design/icons'
 import request from '../utils/request'
@@ -15,7 +13,6 @@ const PAGE_SIZE = 10
 
 export default function Recommend() {
   const navigate = useNavigate()
-  const location = useLocation()
   const containerRef = useRef(null)
   const videoRefs = useRef({})
 
@@ -24,11 +21,13 @@ export default function Recommend() {
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [loadError, setLoadError] = useState(false)
 
   // 获取视频列表
   const fetchVideos = useCallback(async (pageNum) => {
     if (loading) return
     setLoading(true)
+    setLoadError(false)
     try {
       const res = await request.get('/api/videos/recommend', {
         params: { page: pageNum, size: PAGE_SIZE },
@@ -42,7 +41,8 @@ export default function Recommend() {
       } else {
         setVideos((prev) => [...prev, ...newVideos])
       }
-    } catch {
+    } catch (error) {
+      setLoadError(true)
       // 错误由请求拦截器统一处理
     } finally {
       setLoading(false)
@@ -51,6 +51,7 @@ export default function Recommend() {
 
   // 首次加载
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchVideos(1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -58,6 +59,7 @@ export default function Recommend() {
   // 预加载下一页
   useEffect(() => {
     if (page > 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchVideos(page)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,172 +114,97 @@ export default function Recommend() {
     }
   }
 
-  // 模拟数据兜底（当后端无数据时，方便调试）
+  // 模拟数据兜底
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token === 'mock-token-for-debug' && videos.length === 0 && !loading) {
       const mockVideos = [
         {
           id: 1,
-          title: '第一次拍的视频',
+          title: '欢迎来到 MikMok！这是一个沉浸式的短视频平台重构演示。',
           videoUrl: '',
-          authorName: '调试用户',
-          likeCount: 12,
+          authorName: 'MikMok_Official',
+          likeCount: 1280,
           isLiked: false,
-          createdAt: '2026-06-15T10:00:00',
         },
         {
           id: 2,
-          title: '搞笑日常Vlog',
+          title: '深色模式让视频内容更加突出，享受极致的观影体验。',
           videoUrl: '',
-          authorName: '小明',
-          likeCount: 88,
+          authorName: 'Design_Master',
+          likeCount: 886,
           isLiked: true,
-          createdAt: '2026-06-16T14:30:00',
-        },
-        {
-          id: 3,
-          title: '美食探店',
-          videoUrl: '',
-          authorName: '小红',
-          likeCount: 256,
-          isLiked: false,
-          createdAt: '2026-06-17T09:15:00',
         },
       ]
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVideos(mockVideos)
       setHasMore(false)
     }
   }, [videos.length, loading])
 
-  // 底部 TabBar 公共组件
-  const tabBar = (
-    <nav className="recommend-tabbar">
-      <div
-        className={`rec-tab-item ${location.pathname === '/recommend' || location.pathname === '/' ? 'active' : ''}`}
-        onClick={() => navigate('/recommend')}
-      >
-        <PlayCircleOutlined className="rec-tab-icon" />
-        <span className="rec-tab-label">推荐</span>
-      </div>
-      <div
-        className="rec-tab-item rec-tab-publish"
-        onClick={() => navigate('/publish')}
-      >
-        <PlusCircleFilled className="rec-tab-icon" />
-        <span className="rec-tab-label">发布</span>
-      </div>
-      <div
-        className="rec-tab-item"
-        onClick={() => navigate('/manage')}
-      >
-        <VideoCameraOutlined className="rec-tab-icon" />
-        <span className="rec-tab-label">我的</span>
-      </div>
-    </nav>
-  )
-
-  const renderContent = () => {
-    if (videos.length === 0 && loading) {
-      return (
-        <div className="recommend-loading">
-          <div className="loading-spinner" />
-          <p>加载推荐视频中...</p>
-        </div>
-      )
-    }
-
-    if (videos.length === 0 && !loading) {
-      return (
-        <div className="recommend-empty">
-          <p>暂无推荐视频</p>
-          <Button type="primary" onClick={() => navigate('/publish')}>
-            去发布第一个视频
-          </Button>
-        </div>
-      )
-    }
+  const renderVideoItem = (video, index) => {
+    const isActive = index === currentIndex
 
     return (
-      <div
-        className="snap-container"
-        ref={containerRef}
-        onScroll={handleScroll}
-      >
-        {videos.map((video, index) => (
-          <div className="snap-item" key={video.id}>
-            {/* 视频播放器 */}
-            <div className="video-wrapper">
-              {video.videoUrl ? (
-                <video
-                  ref={(el) => (videoRefs.current[video.id] = el)}
-                  src={video.videoUrl}
-                  className="video-player"
-                  loop
-                  muted={false}
-                  playsInline
-                  preload="metadata"
-                  onCanPlay={() => {
-                    if (index === currentIndex) {
-                      videoRefs.current[video.id]?.play().catch(() => {})
-                    }
-                  }}
-                />
-              ) : (
-                <div className="video-placeholder">
-                  <span>🎬 视频加载中...</span>
-                </div>
-              )}
+      <div className="snap-start h-screen w-full relative bg-black flex items-center justify-center overflow-hidden" key={video.id}>
+        {/* 视频播放器 */}
+        <div className="w-full h-full flex items-center justify-center">
+          {video.videoUrl ? (
+            <video
+              ref={(el) => (videoRefs.current[video.id] = el)}
+              src={video.videoUrl}
+              className="w-full h-full object-contain"
+              loop
+              playsInline
+              preload="metadata"
+              onCanPlay={() => {
+                if (isActive) {
+                  videoRefs.current[video.id]?.play().catch(() => {})
+                }
+              }}
+            />
+          ) : (
+            <div className="flex flex-col items-center text-white/20">
+              <span className="text-6xl mb-4">🎬</span>
+              <span className="text-sm tracking-widest">VIDEO LOADING</span>
             </div>
+          )}
+        </div>
 
-            {/* 右侧操作栏 */}
-            <div className="side-actions">
-              {/* 点赞 */}
-              <div
-                className="action-btn"
-                onClick={(e) => handleLike(video.id, e)}
-              >
-                {video.isLiked ? (
-                  <HeartFilled className="icon liked" />
-                ) : (
-                  <HeartOutlined className="icon" />
-                )}
-                <span className="count">{video.likeCount ?? 0}</span>
-              </div>
+        {/* 右侧操作栏 */}
+        <div className="absolute right-4 bottom-32 flex flex-col items-center space-y-6 z-10">
+          <div className="flex flex-col items-center group" onClick={(e) => handleLike(video.id, e)}>
+            <div className={`w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center transition-all active:scale-75 ${video.isLiked ? 'text-primary' : 'text-white'}`}>
+              {video.isLiked ? <HeartFilled className="text-2xl" /> : <HeartOutlined className="text-2xl" />}
             </div>
+            <span className="text-xs mt-1 font-bold drop-shadow-md">{video.likeCount ?? 0}</span>
+          </div>
 
-            {/* 底部信息 */}
-            <div className="video-info">
-              <div className="author">@{video.authorName}</div>
-              <div className="title">{video.title}</div>
+          <div className="flex flex-col items-center" onClick={() => navigate('/publish')}>
+            <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white active:scale-75 transition-all">
+              <PlusCircleFilled className="text-2xl" />
             </div>
+            <span className="text-xs mt-1 font-bold drop-shadow-md">发布</span>
+          </div>
+        </div>
 
-            {/* 滚动指示器 */}
-            <div className="scroll-indicator">
-              {videos.map((_, i) => (
-                <div
-                  key={i}
-                  className={`dot ${i === currentIndex ? 'active' : ''}`}
-                />
-              ))}
+        {/* 底部信息区 */}
+        <div className="absolute left-0 right-0 bottom-0 p-4 pt-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
+          <div className="max-w-[80%]">
+            <div className="font-bold text-lg mb-2 flex items-center">
+              <span className="bg-primary w-1 h-4 rounded-full mr-2"></span>
+              @{video.authorName}
+            </div>
+            <div className="text-sm text-white/90 leading-relaxed line-clamp-2 drop-shadow-sm">
+              {video.title}
             </div>
           </div>
-        ))}
+        </div>
 
-        {/* 加载更多指示器 */}
-        {loading && (
-          <div className="snap-item loading-more">
-            <div className="loading-spinner" />
-            <p>加载更多视频...</p>
-          </div>
-        )}
-
-        {!hasMore && videos.length > 0 && (
-          <div className="snap-item no-more">
-            <p>🎉 已看完所有视频</p>
-            <Button type="primary" onClick={() => navigate('/publish')}>
-              发布更多视频
-            </Button>
+        {/* 顶部品牌 Logo (仅在第一个视频显示或常驻) */}
+        {isActive && (
+          <div className="absolute top-6 left-6 z-20">
+            <span className="text-2xl font-black italic tracking-tighter text-primary drop-shadow-lg">MikMok</span>
           </div>
         )}
       </div>
@@ -285,15 +212,40 @@ export default function Recommend() {
   }
 
   return (
-    <div className="recommend-page">
-      <div className="recommend-topbar">
-        <span className="topbar-brand" onClick={() => navigate('/recommend')}>
-          MikMok
-        </span>
-      </div>
+    <div className="h-screen w-full bg-black overflow-hidden relative">
+      {loadError && videos.length === 0 ? (
+        <div className="h-full w-full flex flex-col items-center justify-center bg-black p-6 text-center">
+          <div className="text-6xl mb-6">📡</div>
+          <h3 className="text-white text-lg font-bold mb-2">网络连接失败</h3>
+          <p className="text-white/40 text-sm mb-8">请检查您的网络设置后重试</p>
+          <button
+            onClick={() => fetchVideos(1)}
+            className="px-8 py-3 bg-primary text-white rounded-full font-bold active:scale-95 transition-all shadow-lg shadow-primary/20"
+          >
+            重新加载
+          </button>
+        </div>
+      ) : (
+        <div
+          className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar"
+          ref={containerRef}
+          onScroll={handleScroll}
+        >
+          {videos.map((video, index) => renderVideoItem(video, index))}
 
-      {renderContent()}
-      {tabBar}
+          {loading && (
+            <div className="h-screen w-full flex items-center justify-center bg-black">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+            </div>
+          )}
+
+          {!hasMore && videos.length > 0 && (
+            <div className="h-40 w-full flex items-center justify-center text-white/20 text-xs tracking-widest uppercase">
+              - End of Feed -
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,12 +1,11 @@
 import { Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom'
-import { Button, Space, message } from 'antd'
+import { message } from 'antd'
 import {
   VideoCameraOutlined,
   PlusCircleFilled,
   PlayCircleOutlined,
 } from '@ant-design/icons'
 import request from '../utils/request'
-import './MainLayout.css'
 
 const tabItems = [
   {
@@ -56,53 +55,55 @@ export default function MainLayout() {
   }
 
   const handleTabClick = (key) => {
-    if (key === '/recommend') {
-      navigate('/recommend')
-    } else {
-      navigate(key)
-    }
+    navigate(key)
   }
 
+  // 推荐页不显示 Header，其他页面显示
+  const isRecommend = location.pathname === '/recommend' || location.pathname === '/'
+
   return (
-    <div className="mobile-layout">
-      {/* 顶部导航 */}
-      <header className="mobile-header">
-        <span className="mobile-brand" onClick={() => navigate('/recommend')}>
-          MikMok
-        </span>
-        <Space size={12}>
-          <span className="mobile-username">{username}</span>
-          <Button
-            type="text"
-            size="small"
-            style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}
-            onClick={handleLogout}
-          >
-            退出
-          </Button>
-        </Space>
-      </header>
+    <div className="flex flex-col h-screen h-[100dvh] bg-black text-white overflow-hidden max-w-[500px] mx-auto border-x border-white/10 shadow-2xl relative">
+      {/* 顶部导航 - 仅在非推荐页显示 */}
+      {!isRecommend && (
+        <header className="flex items-center justify-between px-4 h-12 border-b border-white/10 bg-black/50 backdrop-blur-md shrink-0">
+          <span className="text-lg font-bold tracking-wider text-primary" onClick={() => navigate('/recommend')}>
+            MikMok
+          </span>
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-white/80">{username}</span>
+            <button
+              className="text-xs text-white/40 hover:text-white transition-colors"
+              onClick={handleLogout}
+            >
+              退出
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* 内容区 */}
-      <main className="mobile-content">
+      <main className="flex-1 overflow-y-auto no-scrollbar relative">
         <Outlet />
       </main>
 
       {/* 底部 TabBar */}
-      <nav className="mobile-tabbar">
+      <nav className="flex items-center justify-around h-16 bg-black/90 backdrop-blur-lg border-t border-white/10 shrink-0 z-50">
         {tabItems.map((item) => {
-          const isActive =
-            item.key === '/recommend'
-              ? selectedKey === '/recommend'
-              : location.pathname.startsWith(item.key)
+          const isActive = item.key === selectedKey
+          const isPublish = item.key === '/publish'
+
           return (
             <div
               key={item.key}
-              className={`tabbar-item ${item.key === '/publish' ? 'tabbar-publish' : ''} ${isActive ? 'active' : ''}`}
+              className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-all active:scale-90 ${
+                isActive ? 'text-white' : 'text-white/50'
+              }`}
               onClick={() => handleTabClick(item.key)}
             >
-              <span className="tabbar-icon">{item.icon}</span>
-              <span className="tabbar-label">{item.label}</span>
+              <span className={`text-2xl ${isPublish ? 'text-3xl text-white' : ''}`}>
+                {item.icon}
+              </span>
+              {!isPublish && <span className="text-[10px] mt-1 font-medium">{item.label}</span>}
             </div>
           )
         })}

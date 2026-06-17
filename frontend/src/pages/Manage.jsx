@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Card, Empty, Popconfirm, Table, message } from 'antd'
+import { Button, Empty, Popconfirm, message } from 'antd'
+import {
+  HeartFilled,
+  DeleteOutlined,
+  ClockCircleOutlined,
+  UserOutlined
+} from '@ant-design/icons'
 import request from '../utils/request'
 
 const PAGE_SIZE = 10
@@ -13,24 +19,13 @@ const ALL_MOCK_LIST = [
   { id: 3, title: '搞笑日常Vlog', createTime: '2026-06-17T09:15:00', likeCount: 8, videoUrl: '' },
   { id: 4, title: '周末旅行记录', createTime: '2026-06-10T16:20:00', likeCount: 23, videoUrl: '' },
   { id: 5, title: '美食探店第一弹', createTime: '2026-06-11T11:45:00', likeCount: 17, videoUrl: '' },
-  { id: 6, title: '健身打卡 Day7', createTime: '2026-06-12T07:30:00', likeCount: 9, videoUrl: '' },
-  { id: 7, title: '宠物猫咪日常', createTime: '2026-06-13T20:10:00', likeCount: 31, videoUrl: '' },
-  { id: 8, title: '编程学习笔记', createTime: '2026-06-14T13:00:00', likeCount: 6, videoUrl: '' },
-  { id: 9, title: '校园风景航拍', createTime: '2026-06-14T17:25:00', likeCount: 14, videoUrl: '' },
-  { id: 10, title: '篮球比赛集锦', createTime: '2026-06-15T19:40:00', likeCount: 21, videoUrl: '' },
-  { id: 11, title: '读书分享会实录', createTime: '2026-06-16T10:05:00', likeCount: 4, videoUrl: '' },
-  { id: 12, title: '手工 DIY 教程', createTime: '2026-06-16T15:50:00', likeCount: 11, videoUrl: '' },
-  { id: 13, title: '深夜电台片段', createTime: '2026-06-17T00:30:00', likeCount: 7, videoUrl: '' },
-  { id: 14, title: '产品功能演示', createTime: '2026-06-17T11:20:00', likeCount: 18, videoUrl: '' },
-  { id: 15, title: '毕业设计展示', createTime: '2026-06-17T16:00:00', likeCount: 26, videoUrl: '' },
 ]
 
 function formatTime(time) {
   if (!time) return '-'
   const date = new Date(time)
   if (Number.isNaN(date.getTime())) return time
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
+  return date.toLocaleDateString('zh-CN', {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -44,6 +39,7 @@ export default function Manage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const username = localStorage.getItem('username') || '用户'
 
   const fetchList = useCallback(async (currentPage) => {
     setLoading(true)
@@ -69,8 +65,10 @@ export default function Manage() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchList(page)
-  }, [page, fetchList])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
 
   const handleDelete = async (videoId) => {
     try {
@@ -88,123 +86,132 @@ export default function Manage() {
     }
   }
 
-  const columns = [
-    {
-      title: '#',
-      width: 60,
-      align: 'center',
-      render: (_, __, index) => (page - 1) * PAGE_SIZE + index + 1,
-    },
-    {
-      title: '视频封面',
-      dataIndex: 'videoUrl',
-      width: 140,
-      render: (videoUrl) =>
-        videoUrl ? (
-          <video
-            src={videoUrl}
-            preload="metadata"
-            muted
-            style={{
-              width: 120,
-              height: 68,
-              objectFit: 'cover',
-              borderRadius: 4,
-              background: '#000',
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              width: 120,
-              height: 68,
-              borderRadius: 4,
-              background: '#f0f0f0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#999',
-              fontSize: 12,
-            }}
-          >
-            暂无封面
-          </div>
-        ),
-    },
-    {
-      title: '标题',
-      dataIndex: 'title',
-      ellipsis: true,
-    },
-    {
-      title: '发布时间',
-      dataIndex: 'createdAt',
-      width: 180,
-      render: (_, record) => formatTime(record.createdAt || record.createTime),
-    },
-    {
-      title: '点赞数',
-      dataIndex: 'likeCount',
-      width: 90,
-      align: 'center',
-      render: (likeCount) => likeCount ?? 0,
-    },
-    {
-      title: '操作',
-      width: 100,
-      align: 'center',
-      render: (_, record) => (
-        <Popconfirm
-          title="确定删除该视频吗？"
-          okText="确定"
-          cancelText="取消"
-          onConfirm={() => handleDelete(record.id)}
-        >
-          <Button type="link" danger>
-            删除
-          </Button>
-        </Popconfirm>
-      ),
-    },
-  ]
-
   return (
-    <div style={{ padding: '0 0 16px' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 12,
-          padding: '0 4px',
-        }}
-      >
-        <h3 style={{ margin: 0, fontSize: 17 }}>我的视频</h3>
+    <div className="min-h-full bg-black pb-20">
+      {/* 个人信息头部 */}
+      <div className="bg-gradient-to-b from-card-bg to-black p-6 pt-8 border-b border-white/5">
+        <div className="flex items-center space-x-4">
+          <div className="w-20 h-20 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center text-primary text-3xl">
+            <UserOutlined />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white mb-1">{username}</h2>
+            <div className="flex space-x-4 text-sm text-white/60">
+              <span><strong className="text-white">{total}</strong> 作品</span>
+              <span><strong className="text-white">{list.reduce((acc, cur) => acc + (cur.likeCount || 0), 0)}</strong> 获赞</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card bodyStyle={{ padding: 12 }}>
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <Table
-            rowKey="id"
-            columns={columns}
-            dataSource={list}
-            loading={loading}
-            size="small"
-            locale={{
-              emptyText: <Empty description="暂无视频，去发布第一个吧" />,
-            }}
-            pagination={{
-              current: page,
-              pageSize: PAGE_SIZE,
-              total,
-              size: 'small',
-              showSizeChanger: false,
-              showTotal: (count) => `共 ${count} 条`,
-              onChange: (nextPage) => setPage(nextPage),
-            }}
-          />
+      {/* 视频列表 */}
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white font-medium flex items-center">
+            <span className="w-1 h-4 bg-primary rounded-full mr-2"></span>
+            我的作品
+          </h3>
+          <span className="text-xs text-white/40">共 {total} 个</span>
         </div>
-      </Card>
+
+        {loading && list.length === 0 ? (
+          <div className="py-20 flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+          </div>
+        ) : list.length > 0 ? (
+          <div className="space-y-3">
+            {list.map((video) => (
+              <div key={video.id} className="bg-card-bg rounded-xl overflow-hidden border border-white/5 flex p-3 shadow-lg">
+                {/* 左侧缩略图 */}
+                <div className="relative w-28 h-20 shrink-0 bg-black rounded-lg overflow-hidden">
+                  {video.videoUrl ? (
+                    <video
+                      src={video.videoUrl}
+                      className="w-full h-full object-cover"
+                      preload="metadata"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white/10">
+                      <span className="text-2xl">🎬</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 右侧内容信息 */}
+                <div className="ml-3 flex-1 flex flex-col justify-between min-w-0">
+                  <div>
+                    <div className="text-white font-medium text-sm line-clamp-1 mb-1">
+                      {video.title}
+                    </div>
+                    <div className="flex items-center space-x-3 text-[10px] text-white/40">
+                      <span className="flex items-center">
+                        <ClockCircleOutlined className="mr-1" />
+                        {formatTime(video.createdAt || video.createTime)}
+                      </span>
+                      <span className="flex items-center">
+                        <HeartFilled className="mr-1 text-primary/60" />
+                        {video.likeCount ?? 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Popconfirm
+                      title="确定删除该视频吗？"
+                      okText="确定"
+                      cancelText="取消"
+                      onConfirm={() => handleDelete(video.id)}
+                      overlayClassName="dark-popconfirm"
+                    >
+                      <Button
+                        type="text"
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        className="h-7 px-2 text-xs hover:bg-red-500/10 rounded-md"
+                      >
+                        删除
+                      </Button>
+                    </Popconfirm>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-20">
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={<span className="text-white/40">暂无作品，快去发布吧</span>}
+            />
+            <div className="mt-6 flex justify-center">
+              <Button type="primary" shape="round" onClick={() => navigate('/publish')}>
+                发布第一个视频
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* 分页 */}
+        {total > PAGE_SIZE && (
+          <div className="mt-8 flex justify-center space-x-2">
+            <Button
+              disabled={page === 1}
+              onClick={() => setPage(p => p - 1)}
+              className="bg-card-bg border-white/10 text-white disabled:opacity-30"
+            >
+              上一页
+            </Button>
+            <Button
+              disabled={page * PAGE_SIZE >= total}
+              onClick={() => setPage(p => p + 1)}
+              className="bg-card-bg border-white/10 text-white disabled:opacity-30"
+            >
+              下一页
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
