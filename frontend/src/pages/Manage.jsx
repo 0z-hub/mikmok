@@ -169,40 +169,42 @@ export default function Manage() {
   ]
 
   return (
-    <>
+    <div style={{ padding: '0 0 16px' }}>
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 16,
+          marginBottom: 12,
+          padding: '0 4px',
         }}
       >
-        <h2 style={{ margin: 0 }}>我的视频</h2>
-        <Button type="primary" onClick={() => navigate('/publish')}>
-          发布视频
-        </Button>
+        <h3 style={{ margin: 0, fontSize: 17 }}>我的视频</h3>
       </div>
 
-      <Card>
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={list}
-          loading={loading}
-          locale={{
-            emptyText: <Empty description="暂无视频，去发布第一个吧" />,
-          }}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total,
-            showSizeChanger: false,
-            showTotal: (count) => `共 ${count} 条`,
-            onChange: (nextPage) => setPage(nextPage),
-          }}
-        />
+      <Card bodyStyle={{ padding: 12 }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={list}
+            loading={loading}
+            size="small"
+            locale={{
+              emptyText: <Empty description="暂无视频，去发布第一个吧" />,
+            }}
+            pagination={{
+              current: page,
+              pageSize: PAGE_SIZE,
+              total,
+              size: 'small',
+              showSizeChanger: false,
+              showTotal: (count) => `共 ${count} 条`,
+              onChange: (nextPage) => setPage(nextPage),
+            }}
+          />
+        </div>
       </Card>
-    </>
+    </div>
   )
 }

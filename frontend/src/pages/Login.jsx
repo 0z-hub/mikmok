@@ -23,7 +23,7 @@ export default function Login() {
         localStorage.setItem('token', token)
         localStorage.setItem('username', res.data?.username || values.username)
         message.success('登录成功')
-        navigate('/manage')
+        navigate('/recommend')
       } else {
         message.error('登录失败：未获取到 token')
       }
@@ -37,7 +37,7 @@ export default function Login() {
   const handleDebugLogin = () => {
     localStorage.setItem('token', 'mock-token-for-debug')
     localStorage.setItem('username', '调试用户')
-    navigate('/manage')
+    navigate('/recommend')
   }
 
   const handleRegister = async (values) => {
@@ -139,13 +139,23 @@ export default function Login() {
     <div
       style={{
         minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         background: '#f0f2f5',
+        padding: 16,
       }}
     >
-      <Card title="欢迎" style={{ width: 400 }}>
+      <Card
+        title="欢迎"
+        style={{
+          width: '100%',
+          maxWidth: 400,
+          borderRadius: 12,
+          boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+        }}
+      >
         <Tabs activeKey={activeKey} onChange={setActiveKey} items={tabItems} />
         <div style={{ textAlign: 'center', marginTop: 8 }}>
           <Button type="link" onClick={handleDebugLogin}>

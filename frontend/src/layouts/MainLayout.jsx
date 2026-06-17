@@ -1,24 +1,28 @@
 import { Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom'
-import { Layout, Menu, Button, Space, message } from 'antd'
+import { Button, Space, message } from 'antd'
 import {
   VideoCameraOutlined,
-  UploadOutlined,
-  LogoutOutlined,
+  PlusCircleFilled,
+  PlayCircleOutlined,
 } from '@ant-design/icons'
 import request from '../utils/request'
+import './MainLayout.css'
 
-const { Header, Sider, Content } = Layout
-
-const menuItems = [
+const tabItems = [
   {
-    key: '/manage',
-    icon: <VideoCameraOutlined />,
-    label: '我的视频',
+    key: '/recommend',
+    icon: <PlayCircleOutlined />,
+    label: '推荐',
   },
   {
     key: '/publish',
-    icon: <UploadOutlined />,
-    label: '发布视频',
+    icon: <PlusCircleFilled />,
+    label: '发布',
+  },
+  {
+    key: '/manage',
+    icon: <VideoCameraOutlined />,
+    label: '我的',
   },
 ]
 
@@ -34,8 +38,8 @@ export default function MainLayout() {
   const username = localStorage.getItem('username') || '用户'
 
   const selectedKey =
-    menuItems.find((item) => location.pathname.startsWith(item.key))?.key ||
-    '/manage'
+    tabItems.find((item) => location.pathname.startsWith(item.key))?.key ||
+    '/recommend'
 
   const handleLogout = async () => {
     if (localStorage.getItem('token') !== 'mock-token-for-debug') {
@@ -51,55 +55,58 @@ export default function MainLayout() {
     navigate('/login')
   }
 
+  const handleTabClick = (key) => {
+    if (key === '/recommend') {
+      navigate('/recommend')
+    } else {
+      navigate(key)
+    }
+  }
+
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 24px',
-          background: '#001529',
-        }}
-      >
-        <div
-          style={{
-            color: '#fff',
-            fontSize: 18,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-          onClick={() => navigate('/manage')}
-        >
-          简易抖音
-        </div>
-        <Space>
-          <span style={{ color: 'rgba(255, 255, 255, 0.85)' }}>{username}</span>
+    <div className="mobile-layout">
+      {/* 顶部导航 */}
+      <header className="mobile-header">
+        <span className="mobile-brand" onClick={() => navigate('/recommend')}>
+          MikMok
+        </span>
+        <Space size={12}>
+          <span className="mobile-username">{username}</span>
           <Button
             type="text"
-            icon={<LogoutOutlined />}
-            style={{ color: 'rgba(255, 255, 255, 0.85)' }}
+            size="small"
+            style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}
             onClick={handleLogout}
           >
-            退出登录
+            退出
           </Button>
         </Space>
-      </Header>
+      </header>
 
-      <Layout>
-        <Sider width={200} style={{ background: '#fff' }}>
-          <Menu
-            mode="inline"
-            selectedKeys={[selectedKey]}
-            items={menuItems}
-            style={{ height: '100%', borderRight: 0 }}
-            onClick={({ key }) => navigate(key)}
-          />
-        </Sider>
-        <Content style={{ background: '#f0f2f5', padding: 24 }}>
-          <Outlet />
-        </Content>
-      </Layout>
-    </Layout>
+      {/* 内容区 */}
+      <main className="mobile-content">
+        <Outlet />
+      </main>
+
+      {/* 底部 TabBar */}
+      <nav className="mobile-tabbar">
+        {tabItems.map((item) => {
+          const isActive =
+            item.key === '/recommend'
+              ? selectedKey === '/recommend'
+              : location.pathname.startsWith(item.key)
+          return (
+            <div
+              key={item.key}
+              className={`tabbar-item ${item.key === '/publish' ? 'tabbar-publish' : ''} ${isActive ? 'active' : ''}`}
+              onClick={() => handleTabClick(item.key)}
+            >
+              <span className="tabbar-icon">{item.icon}</span>
+              <span className="tabbar-label">{item.label}</span>
+            </div>
+          )
+        })}
+      </nav>
+    </div>
   )
 }

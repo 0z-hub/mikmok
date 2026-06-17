@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import Login from '../pages/Login'
 import Manage from '../pages/Manage'
 import Publish from '../pages/Publish'
+import Recommend from '../pages/Recommend'
 import MainLayout from '../layouts/MainLayout'
 
 const router = createBrowserRouter([
@@ -15,7 +16,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/manage" replace />,
+        element: <Navigate to="/recommend" replace />,
       },
       {
         path: 'manage',
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
         element: <Publish />,
       },
     ],
+  },
+  {
+    path: '/recommend',
+    element: <Recommend />,
   },
 ])
 

@@ -53,8 +53,12 @@ export default function Publish() {
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      <Card title="发布视频">
+    <div style={{ padding: '16px 0' }}>
+      <Card
+        title="发布视频"
+        bodyStyle={{ padding: 12 }}
+        style={{ borderRadius: 8 }}
+      >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             label="视频标题"
