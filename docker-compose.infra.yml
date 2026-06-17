@@ -5,7 +5,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: ${DOCKER_REGISTRY:-docker.io}/library/postgres:15-alpine
     container_name: mikmok-postgres
     restart: always
     environment:
@@ -18,7 +18,7 @@ services:
       - ./data/postgres:/var/lib/postgresql/data
 
   redis:
-    image: redis:7-alpine
+    image: ${DOCKER_REGISTRY:-docker.io}/library/redis:7-alpine
     container_name: mikmok-redis
     restart: always
     command: redis-server --requirepass ${REDIS_PASSWORD}
@@ -28,7 +28,7 @@ services:
       - ./data/redis:/data
 
   minio:
-    image: minio/minio
+    image: ${DOCKER_REGISTRY:-docker.io}/minio/minio
     container_name: mikmok-minio
     restart: always
     ports:

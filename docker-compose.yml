@@ -6,6 +6,7 @@ version: '3.8'
 services:
   # 后端服务
   backend:
+    image: ${DOCKER_REGISTRY:-docker.io}/library/maven:3.9.6-eclipse-temurin-17-alpine
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -27,6 +28,7 @@ services:
 
   # 前端服务
   frontend:
+    image: ${DOCKER_REGISTRY:-docker.io}/library/node:20-alpine
     build:
       context: ./frontend
       dockerfile: Dockerfile
