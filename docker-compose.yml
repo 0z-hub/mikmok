@@ -46,7 +46,7 @@ services:
 
   # Nginx 反向代理 (可选，用于模拟生产环境)
   nginx:
-    image: nginx:alpine
+    image: ${DOCKER_REGISTRY:-docker.io}/library/nginx:alpine
     container_name: mikmok-nginx
     ports:
       - "80:80"
