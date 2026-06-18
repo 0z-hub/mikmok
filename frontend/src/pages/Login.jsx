@@ -20,12 +20,13 @@ export default function Login() {
         password: values.password,
       })
       const token = res.data?.token
+      const role = res.data?.role || 'USER'
       if (token) {
         localStorage.setItem('token', token)
         localStorage.setItem('username', res.data?.username || values.username)
-        localStorage.setItem('role', res.data?.role || 'USER')
+        localStorage.setItem('role', role)
         message.success('登录成功')
-        navigate('/recommend')
+        navigate(role === 'ADMIN' ? '/admin' : '/recommend')
       } else {
         message.error('登录失败：未获取到 token')
       }
@@ -178,6 +179,16 @@ export default function Login() {
             centered
             className="dark-tabs"
           />
+        </div>
+
+        <div className="text-center mt-6">
+          <Button
+            type="link"
+            className="!text-white/40 hover:!text-primary !text-sm"
+            onClick={() => navigate('/admin/login')}
+          >
+            管理员入口 →
+          </Button>
         </div>
       </div>
 
