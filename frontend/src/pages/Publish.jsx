@@ -40,6 +40,7 @@ export default function Publish() {
 
     const formData = new FormData()
     formData.append('title', values.title)
+    formData.append('description', values.description || '')
     formData.append('file', file)
 
     setLoading(true)
@@ -130,6 +131,8 @@ export default function Publish() {
             >
               <Input.TextArea
                 rows={3}
+                showCount
+                maxLength={100}
                 placeholder="添加更多细节描述..."
                 className="!bg-transparent !border-0 !border-b !border-white/10 !rounded-0 !px-0 !text-white placeholder:!text-white/20 focus:!border-primary !shadow-none transition-all resize-none"
               />
