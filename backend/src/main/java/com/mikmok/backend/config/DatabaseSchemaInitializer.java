@@ -25,5 +25,15 @@ public class DatabaseSchemaInitializer {
         } catch (Exception e) {
             log.error("Failed to migrate users.role column", e);
         }
+
+        try {
+            jdbcTemplate.execute("""
+                    ALTER TABLE videos
+                    ADD COLUMN IF NOT EXISTS description VARCHAR(255)
+                    """);
+            log.info("Database schema check: videos.description column ensured");
+        } catch (Exception e) {
+            log.error("Failed to migrate videos.description column", e);
+        }
     }
 }

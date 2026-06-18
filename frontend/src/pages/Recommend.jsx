@@ -240,15 +240,17 @@ export default function Recommend() {
         </div>
 
         {/* 底部信息区 */}
-        <div className="absolute left-0 right-0 bottom-0 p-4 pt-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
+        <div className="absolute left-0 right-0 bottom-0 p-4 pb-5 pt-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
           <div className="max-w-[80%]">
             <div className="font-bold text-lg mb-2 flex items-center">
               <span className="bg-primary w-1 h-4 rounded-full mr-2"></span>
               @{video.authorName}
             </div>
-            <div className="text-sm text-white/90 leading-relaxed line-clamp-3 drop-shadow-sm">
-              <span className="font-bold mr-2">{video.title}</span>
-              {video.description}
+            <div className="text-sm text-white/90 leading-relaxed drop-shadow-sm">
+              <div className="font-bold line-clamp-2">{video.title}</div>
+              {video.description?.trim() && (
+                <div className="mt-1 text-white/75 line-clamp-3">{video.description.trim()}</div>
+              )}
             </div>
           </div>
         </div>
