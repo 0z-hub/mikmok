@@ -121,7 +121,8 @@ export default function Recommend() {
       const mockVideos = [
         {
           id: 1,
-          title: '欢迎来到 MikMok！这是一个沉浸式的短视频平台重构演示。',
+          title: '欢迎来到 MikMok！',
+          description: '这是一个沉浸式的短视频平台重构演示。',
           videoUrl: '',
           authorName: 'MikMok_Official',
           likeCount: 1280,
@@ -129,7 +130,8 @@ export default function Recommend() {
         },
         {
           id: 2,
-          title: '深色模式让视频内容更加突出，享受极致的观影体验。',
+          title: '深色模式体验',
+          description: '深色模式让视频内容更加突出，享受极致的观影体验。',
           videoUrl: '',
           authorName: 'Design_Master',
           likeCount: 886,
@@ -195,8 +197,9 @@ export default function Recommend() {
               <span className="bg-primary w-1 h-4 rounded-full mr-2"></span>
               @{video.authorName}
             </div>
-            <div className="text-sm text-white/90 leading-relaxed line-clamp-2 drop-shadow-sm">
-              {video.title}
+            <div className="text-sm text-white/90 leading-relaxed line-clamp-3 drop-shadow-sm">
+              <span className="font-bold mr-2">{video.title}</span>
+              {video.description}
             </div>
           </div>
         </div>
