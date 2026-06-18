@@ -23,6 +23,7 @@ export default function Login() {
       if (token) {
         localStorage.setItem('token', token)
         localStorage.setItem('username', res.data?.username || values.username)
+        localStorage.setItem('role', res.data?.role || 'USER')
         message.success('登录成功')
         navigate('/recommend')
       } else {

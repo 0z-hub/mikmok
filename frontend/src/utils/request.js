@@ -37,6 +37,7 @@ request.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('username')
+      localStorage.removeItem('role')
     }
     message.error(errMsg)
     return Promise.reject(error)
