@@ -11,6 +11,13 @@ import './Recommend.css'
 
 const PAGE_SIZE = 10
 
+function formatDuration(seconds) {
+  if (!seconds || !Number.isFinite(seconds)) return '0:00'
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
 function mergeStartVideo(startVideo, list) {
   if (!startVideo) return list
   return [startVideo, ...list.filter((v) => v.id !== startVideo.id)]
@@ -21,6 +28,7 @@ export default function Recommend() {
   const location = useLocation()
   const containerRef = useRef(null)
   const videoRefs = useRef({})
+  const progressBarRefs = useRef({})
   const pendingStartVideo = useRef(location.state?.startVideo ?? null)
   const pendingPlayId = useRef(null)
 
@@ -30,6 +38,7 @@ export default function Recommend() {
   const [hasMore, setHasMore] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loadError, setLoadError] = useState(false)
+  const [playbackTime, setPlaybackTime] = useState({ current: 0, duration: 0 })
 
   useEffect(() => {
     if (location.state?.startVideo) {
@@ -93,6 +102,30 @@ export default function Recommend() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
 
+  const updateProgress = useCallback((videoId, currentTime, duration) => {
+    const bar = progressBarRefs.current[videoId]
+    if (!bar || !duration) return
+    bar.style.width = `${(currentTime / duration) * 100}%`
+  }, [])
+
+  const resetProgress = useCallback((videoId) => {
+    const bar = progressBarRefs.current[videoId]
+    if (bar) bar.style.width = '0%'
+  }, [])
+
+  const handleSeek = useCallback((videoId, e) => {
+    e.stopPropagation()
+    const video = videoRefs.current[videoId]
+    if (!video?.duration) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width))
+    const newTime = ratio * video.duration
+    video.currentTime = newTime
+    updateProgress(videoId, newTime, video.duration)
+    setPlaybackTime({ current: newTime, duration: video.duration })
+  }, [updateProgress])
+
   // 监听滚动：检测当前视频索引 + 预加载
   const handleScroll = useCallback(() => {
     const container = containerRef.current
@@ -103,6 +136,8 @@ export default function Recommend() {
     const index = Math.round(scrollTop / itemHeight)
 
     if (index !== currentIndex) {
+      resetProgress(videos[currentIndex]?.id)
+      setPlaybackTime({ current: 0, duration: 0 })
       setCurrentIndex(index)
 
       // 暂停所有视频，播放当前视频
@@ -120,7 +155,7 @@ export default function Recommend() {
     if (index >= videos.length - 3 && hasMore && !loading) {
       setPage((prev) => prev + 1)
     }
-  }, [currentIndex, videos, hasMore, loading])
+  }, [currentIndex, videos, hasMore, loading, resetProgress])
 
   // 点赞 / 取消点赞
   const handleLike = async (videoId, e) => {
@@ -148,6 +183,7 @@ export default function Recommend() {
     const playId = pendingPlayId.current
     pendingPlayId.current = null
     setCurrentIndex(0)
+    setPlaybackTime({ current: 0, duration: 0 })
 
     const container = containerRef.current
     if (container) {
@@ -214,10 +250,21 @@ export default function Recommend() {
               loop
               playsInline
               preload="metadata"
+              onLoadedMetadata={(e) => {
+                if (!isActive) return
+                const el = e.currentTarget
+                setPlaybackTime({ current: el.currentTime, duration: el.duration })
+              }}
               onCanPlay={() => {
                 if (isActive) {
                   videoRefs.current[video.id]?.play().catch(() => {})
                 }
+              }}
+              onTimeUpdate={(e) => {
+                if (!isActive) return
+                const el = e.currentTarget
+                updateProgress(video.id, el.currentTime, el.duration)
+                setPlaybackTime({ current: el.currentTime, duration: el.duration })
               }}
             />
           ) : (
@@ -240,8 +287,34 @@ export default function Recommend() {
         </div>
 
         {/* 底部信息区 */}
-        <div className="absolute left-0 right-0 bottom-0 p-4 pb-5 pt-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
-          <div className="max-w-[80%]">
+        <div className="absolute left-0 right-0 bottom-0 z-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+          {isActive && video.videoUrl && (
+            <div className="px-4 pt-3">
+              <div className="flex items-center justify-between text-[10px] text-white/60 mb-1 font-mono tabular-nums select-none">
+                <span>{formatDuration(playbackTime.current)}</span>
+                <span>{formatDuration(playbackTime.duration)}</span>
+              </div>
+              <div
+                role="slider"
+                aria-label="播放进度"
+                aria-valuemin={0}
+                aria-valuemax={playbackTime.duration || 0}
+                aria-valuenow={playbackTime.current}
+                className="h-5 flex items-center cursor-pointer"
+                onClick={(e) => handleSeek(video.id, e)}
+              >
+                <div className="h-[3px] w-full rounded-full bg-white/25 overflow-hidden group-hover:h-[4px] transition-all">
+                  <div
+                    ref={(el) => (progressBarRefs.current[video.id] = el)}
+                    className="h-full bg-primary rounded-full pointer-events-none"
+                    style={{ width: '0%' }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="p-4 pb-5 pt-3 max-w-[80%]">
             <div className="font-bold text-lg mb-2 flex items-center">
               <span className="bg-primary w-1 h-4 rounded-full mr-2"></span>
               @{video.authorName}
