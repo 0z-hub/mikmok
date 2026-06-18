@@ -146,7 +146,7 @@ export default function Recommend() {
     const isActive = index === currentIndex
 
     return (
-      <div className="snap-start h-screen w-full relative bg-black flex items-center justify-center overflow-hidden" key={video.id}>
+      <div className="snap-start h-full w-full relative bg-black flex items-center justify-center overflow-hidden" key={video.id}>
         {/* 视频播放器 */}
         <div className="w-full h-full flex items-center justify-center">
           {video.videoUrl ? (
@@ -212,7 +212,7 @@ export default function Recommend() {
   }
 
   return (
-    <div className="h-screen w-full bg-black overflow-hidden relative">
+    <div className="h-full w-full bg-black overflow-hidden relative">
       {loadError && videos.length === 0 ? (
         <div className="h-full w-full flex flex-col items-center justify-center bg-black p-6 text-center">
           <div className="text-6xl mb-6">📡</div>
@@ -234,7 +234,7 @@ export default function Recommend() {
           {videos.map((video, index) => renderVideoItem(video, index))}
 
           {loading && (
-            <div className="h-screen w-full flex items-center justify-center bg-black">
+            <div className="h-full w-full flex items-center justify-center bg-black">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
             </div>
           )}
