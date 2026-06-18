@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { message } from 'antd'
 import {
   HeartOutlined,
@@ -11,10 +11,18 @@ import './Recommend.css'
 
 const PAGE_SIZE = 10
 
+function mergeStartVideo(startVideo, list) {
+  if (!startVideo) return list
+  return [startVideo, ...list.filter((v) => v.id !== startVideo.id)]
+}
+
 export default function Recommend() {
   const navigate = useNavigate()
+  const location = useLocation()
   const containerRef = useRef(null)
   const videoRefs = useRef({})
+  const pendingStartVideo = useRef(location.state?.startVideo ?? null)
+  const pendingPlayId = useRef(null)
 
   const [videos, setVideos] = useState([])
   const [page, setPage] = useState(1)
@@ -22,6 +30,12 @@ export default function Recommend() {
   const [hasMore, setHasMore] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loadError, setLoadError] = useState(false)
+
+  useEffect(() => {
+    if (location.state?.startVideo) {
+      navigate('.', { replace: true, state: null })
+    }
+  }, [location.state, navigate])
 
   // 获取视频列表
   const fetchVideos = useCallback(async (pageNum) => {
@@ -37,12 +51,26 @@ export default function Recommend() {
         setHasMore(false)
       }
       if (pageNum === 1) {
-        setVideos(newVideos)
+        const startVideo = pendingStartVideo.current
+        const merged = mergeStartVideo(startVideo, newVideos)
+        if (startVideo) {
+          pendingStartVideo.current = null
+          pendingPlayId.current = startVideo.id
+        }
+        setVideos(merged)
       } else {
         setVideos((prev) => [...prev, ...newVideos])
       }
     } catch (error) {
-      setLoadError(true)
+      if (pageNum === 1 && pendingStartVideo.current) {
+        const startVideo = pendingStartVideo.current
+        pendingStartVideo.current = null
+        pendingPlayId.current = startVideo.id
+        setVideos([startVideo])
+        setHasMore(false)
+      } else {
+        setLoadError(true)
+      }
       // 错误由请求拦截器统一处理
     } finally {
       setLoading(false)
@@ -114,6 +142,27 @@ export default function Recommend() {
     }
   }
 
+  useEffect(() => {
+    if (!pendingPlayId.current || videos.length === 0) return
+
+    const playId = pendingPlayId.current
+    pendingPlayId.current = null
+    setCurrentIndex(0)
+
+    const container = containerRef.current
+    if (container) {
+      container.scrollTop = 0
+    }
+
+    requestAnimationFrame(() => {
+      const currentVideo = videoRefs.current[playId]
+      if (currentVideo) {
+        currentVideo.currentTime = 0
+        currentVideo.play().catch(() => {})
+      }
+    })
+  }, [videos])
+
   // 模拟数据兜底
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -121,7 +170,8 @@ export default function Recommend() {
       const mockVideos = [
         {
           id: 1,
-          title: '欢迎来到 MikMok！这是一个沉浸式的短视频平台重构演示。',
+          title: '欢迎来到 MikMok！',
+          description: '这是一个沉浸式的短视频平台重构演示。',
           videoUrl: '',
           authorName: 'MikMok_Official',
           likeCount: 1280,
@@ -129,15 +179,22 @@ export default function Recommend() {
         },
         {
           id: 2,
-          title: '深色模式让视频内容更加突出，享受极致的观影体验。',
+          title: '深色模式体验',
+          description: '深色模式让视频内容更加突出，享受极致的观影体验。',
           videoUrl: '',
           authorName: 'Design_Master',
           likeCount: 886,
           isLiked: true,
         },
       ]
+      const startVideo = pendingStartVideo.current
+      const merged = mergeStartVideo(startVideo, mockVideos)
+      if (startVideo) {
+        pendingStartVideo.current = null
+        pendingPlayId.current = startVideo.id
+      }
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setVideos(mockVideos)
+      setVideos(merged)
       setHasMore(false)
     }
   }, [videos.length, loading])
@@ -172,7 +229,7 @@ export default function Recommend() {
         </div>
 
         {/* 右侧操作栏 */}
-        <div className="absolute right-4 bottom-32 flex flex-col items-center space-y-6 z-10">
+        <div className="absolute right-4 bottom-48 flex flex-col items-center space-y-6 z-10">
           <div className="flex flex-col items-center group" onClick={(e) => handleLike(video.id, e)}>
             <div className={`w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center transition-all active:scale-75 ${video.isLiked ? 'text-primary' : 'text-white'}`}>
               {video.isLiked ? <HeartFilled className="text-2xl" /> : <HeartOutlined className="text-2xl" />}
@@ -180,12 +237,6 @@ export default function Recommend() {
             <span className="text-xs mt-1 font-bold drop-shadow-md">{video.likeCount ?? 0}</span>
           </div>
 
-          <div className="flex flex-col items-center" onClick={() => navigate('/publish')}>
-            <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white active:scale-75 transition-all">
-              <PlusCircleFilled className="text-2xl" />
-            </div>
-            <span className="text-xs mt-1 font-bold drop-shadow-md">发布</span>
-          </div>
         </div>
 
         {/* 底部信息区 */}
@@ -195,18 +246,12 @@ export default function Recommend() {
               <span className="bg-primary w-1 h-4 rounded-full mr-2"></span>
               @{video.authorName}
             </div>
-            <div className="text-sm text-white/90 leading-relaxed line-clamp-2 drop-shadow-sm">
-              {video.title}
+            <div className="text-sm text-white/90 leading-relaxed line-clamp-3 drop-shadow-sm">
+              <span className="font-bold mr-2">{video.title}</span>
+              {video.description}
             </div>
           </div>
         </div>
-
-        {/* 顶部品牌 Logo (仅在第一个视频显示或常驻) */}
-        {isActive && (
-          <div className="absolute top-6 left-6 z-20">
-            <span className="text-2xl font-black italic tracking-tighter text-primary drop-shadow-lg">MikMok</span>
-          </div>
-        )}
       </div>
     )
   }

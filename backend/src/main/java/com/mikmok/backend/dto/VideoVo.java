@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class VideoVo {
     private Long id;
     private String title;
+    private String description;
     private String videoUrl;
     private String authorName;
     private Long likeCount;

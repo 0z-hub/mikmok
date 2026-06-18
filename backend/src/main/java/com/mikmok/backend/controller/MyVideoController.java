@@ -30,9 +30,12 @@ public class MyVideoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Result<Map<String, Long>> upload(@RequestParam("file") MultipartFile file, @RequestParam("title") String title) {
+    public Result<Map<String, Long>> upload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title,
+            @RequestParam(value = "description", required = false) String description) {
         Long userId = getCurrentUserId();
-        Video video = videoService.uploadVideo(userId, title, file);
+        Video video = videoService.uploadVideo(userId, title, description, file);
         return Result.success(201, "发布成功", Map.of("id", video.getId()));
     }
 
@@ -46,6 +49,7 @@ public class MyVideoController {
         List<VideoVo> voList = videos.getContent().stream().map(v -> VideoVo.builder()
                 .id(v.getId())
                 .title(v.getTitle())
+                .description(v.getDescription())
                 .videoUrl(v.getVideoUrl())
                 .authorName(user.getUsername())
                 .likeCount(v.getLikeCount().longValue())
