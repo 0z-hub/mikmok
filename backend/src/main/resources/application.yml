@@ -2,6 +2,9 @@ spring:
   application:
     name: mikmok-backend
 
+  jackson:
+    time-zone: Asia/Shanghai
+
   servlet:
     multipart:
       max-file-size: 150MB
@@ -22,6 +25,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          time_zone: Asia/Shanghai
 
   data:
     redis:
