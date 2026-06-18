@@ -68,10 +68,11 @@ public class VideoServiceTest {
             return video;
         });
 
-        Video result = videoService.uploadVideo(1L, "Test Title", mockFile);
+        Video result = videoService.uploadVideo(1L, "Test Title", "Test Description", mockFile);
 
         assertNotNull(result);
         assertEquals("Test Title", result.getTitle());
+        assertEquals("Test Description", result.getDescription());
         assertEquals("http://minio/videos/test.mp4", result.getVideoUrl());
         verify(fileStorageService, times(1)).upload(anyString(), any(), anyString());
         verify(videoRepository, times(1)).save(any(Video.class));
@@ -92,9 +93,11 @@ public class VideoServiceTest {
             return video;
         });
 
-        Video result = videoService.uploadVideo(1L, "Second Title", mockFile);
+        Video result = videoService.uploadVideo(1L, "Second Title", "Second Description", mockFile);
 
         assertNotNull(result);
+        assertEquals("Second Title", result.getTitle());
+        assertEquals("Second Description", result.getDescription());
         assertEquals("http://minio/videos/existing.mp4", result.getVideoUrl());
         verify(fileStorageService, never()).upload(anyString(), any(), anyString());
         verify(videoRepository, times(1)).save(any(Video.class));
