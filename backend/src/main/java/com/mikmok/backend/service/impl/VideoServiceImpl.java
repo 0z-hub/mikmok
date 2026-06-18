@@ -14,11 +14,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -116,17 +119,25 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public List<VideoVo> getRecommendedVideos(Long userId, int page, int size) {
-        // 1. 获取已看视频集合（仅登录用户）
+        // 1. 预热缓存（仅登录用户）
+        if (userId != null) {
+            ensureUserCache(userId);
+        }
+
+        // 2. 获取已看视频集合（仅登录用户）
         Set<Long> excludeIds = new HashSet<>();
         if (userId != null) {
             Set<String> watched = redisTemplate.opsForSet()
                     .members(REDIS_USER_WATCHED_PREFIX + userId);
             if (watched != null && !watched.isEmpty()) {
-                excludeIds = watched.stream().map(Long::valueOf).collect(Collectors.toSet());
+                excludeIds = watched.stream()
+                        .filter(s -> !"EMPTY".equals(s))
+                        .map(Long::valueOf)
+                        .collect(Collectors.toSet());
             }
         }
 
-        // 2. 从 Redis ZSet 获取按热度排序的候选视频 ID
+        // 3. 从 Redis ZSet 获取按热度排序的候选视频 ID
         Set<Long> candidateIds = new LinkedHashSet<>(); // 保持顺序
         Set<String> rankedSet = redisTemplate.opsForZSet()
                 .reverseRange(REDIS_RANK_KEY, 0, 99);
@@ -139,7 +150,7 @@ public class VideoServiceImpl implements VideoService {
             }
         }
 
-        // 3. 分页截取
+        // 4. 分页截取
         List<Long> resultIds = new ArrayList<>();
         int skip = (page - 1) * size;
         int count = 0;
@@ -153,7 +164,7 @@ public class VideoServiceImpl implements VideoService {
             count++;
         }
 
-        // 4. 兜底逻辑：从数据库补足
+        // 5. 兜底逻辑：从数据库补足
         if (resultIds.size() < size) {
             int needed = size - resultIds.size();
             Set<Long> allExclude = new HashSet<>(excludeIds);
@@ -170,7 +181,7 @@ public class VideoServiceImpl implements VideoService {
             }
         }
 
-        // 5. 查询视频详情
+        // 6. 查询视频详情
         List<Video> videos = videoRepository.findAllById(resultIds);
         Map<Long, Video> videoMap = videos.stream()
                 .collect(Collectors.toMap(Video::getId, v -> v));
@@ -179,13 +190,15 @@ public class VideoServiceImpl implements VideoService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // 6. 记录已看（登录用户）
+        // 7. 记录已看（登录用户）
         if (userId != null && !resultIds.isEmpty()) {
             String[] strIds = resultIds.stream().map(String::valueOf).toArray(String[]::new);
             redisTemplate.opsForSet().add(REDIS_USER_WATCHED_PREFIX + userId, strIds);
+            // 异步入库
+            recordWatchHistoryAsync(userId, resultIds);
         }
 
-        // 7. 构建响应
+        // 8. 构建响应
         return orderedVideos.stream().map(v -> {
             String authorName = userRepository.findById(v.getUserId())
                     .map(User::getUsername).orElse("Unknown");
@@ -202,6 +215,44 @@ public class VideoServiceImpl implements VideoService {
                     .createdAt(v.getCreatedAt())
                     .build();
         }).collect(Collectors.toList());
+    }
+
+    private void ensureUserCache(Long userId) {
+        String watchedKey = REDIS_USER_WATCHED_PREFIX + userId;
+        if (Boolean.FALSE.equals(redisTemplate.hasKey(watchedKey))) {
+            List<WatchHistory> history = watchHistoryRepository.findByUserId(userId);
+            if (!history.isEmpty()) {
+                for (WatchHistory wh : history) {
+                    redisTemplate.opsForSet().add(watchedKey, wh.getVideoId().toString());
+                    if (wh.getIsLiked()) {
+                        redisTemplate.opsForSet().add(REDIS_USER_LIKED_PREFIX + userId, wh.getVideoId().toString());
+                    }
+                }
+                redisTemplate.expire(watchedKey, Duration.ofHours(24));
+                redisTemplate.expire(REDIS_USER_LIKED_PREFIX + userId, Duration.ofHours(24));
+            } else {
+                // 防止缓存击穿，存入一个空标记
+                redisTemplate.opsForSet().add(watchedKey, "EMPTY");
+                redisTemplate.expire(watchedKey, Duration.ofMinutes(5));
+            }
+        }
+    }
+
+    @Async
+    public void recordWatchHistoryAsync(Long userId, List<Long> videoIds) {
+        for (Long vid : videoIds) {
+            watchHistoryRepository.findByUserIdAndVideoId(userId, vid).ifPresentOrElse(
+                    existing -> {
+                    }, // 已存在不处理
+                    () -> {
+                        WatchHistory wh = new WatchHistory();
+                        wh.setUserId(userId);
+                        wh.setVideoId(vid);
+                        wh.setIsLiked(false);
+                        watchHistoryRepository.save(wh);
+                    }
+            );
+        }
     }
 
     @Override
