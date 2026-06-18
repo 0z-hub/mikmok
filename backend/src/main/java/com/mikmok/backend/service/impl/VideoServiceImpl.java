@@ -179,6 +179,18 @@ public class VideoServiceImpl implements VideoService {
             for (Video v : supplement.getContent()) {
                 resultIds.add(v.getId());
             }
+
+            // 如果还是不够（说明用户看完了所有过滤后的视频），则执行最终兜底：忽略已看限制，按热度随机补全
+            if (resultIds.size() < size) {
+                int finalNeeded = size - resultIds.size();
+                Page<Video> finalFallback = videoRepository.findAllByOrderByLikeCountDesc(PageRequest.of(0, finalNeeded));
+                for (Video v : finalFallback.getContent()) {
+                    if (!resultIds.contains(v.getId())) {
+                        resultIds.add(v.getId());
+                    }
+                    if (resultIds.size() >= size) break;
+                }
+            }
         }
 
         // 6. 查询视频详情
@@ -272,6 +284,13 @@ public class VideoServiceImpl implements VideoService {
             redisTemplate.opsForZSet().incrementScore(REDIS_RANK_KEY, member, -1);
             videoRepository.save(video);
 
+            // 同步更新数据库状态
+            watchHistoryRepository.findByUserIdAndVideoId(userId, videoId).ifPresent(wh -> {
+                wh.setIsLiked(false);
+                wh.setUpdatedAt(LocalDateTime.now());
+                watchHistoryRepository.save(wh);
+            });
+
             return LikeResponse.builder()
                     .liked(false)
                     .currentLikeCount(video.getLikeCount())
@@ -285,13 +304,18 @@ public class VideoServiceImpl implements VideoService {
 
             // 同时记录到已看集合
             redisTemplate.opsForSet().add(REDIS_USER_WATCHED_PREFIX + userId, member);
-            // 持久化到数据库
-            if (!watchHistoryRepository.existsByUserIdAndVideoId(userId, videoId)) {
-                WatchHistory wh = new WatchHistory();
-                wh.setUserId(userId);
-                wh.setVideoId(videoId);
-                watchHistoryRepository.save(wh);
-            }
+
+            // 同步更新数据库状态
+            WatchHistory wh = watchHistoryRepository.findByUserIdAndVideoId(userId, videoId)
+                    .orElseGet(() -> {
+                        WatchHistory newWh = new WatchHistory();
+                        newWh.setUserId(userId);
+                        newWh.setVideoId(videoId);
+                        return newWh;
+                    });
+            wh.setIsLiked(true);
+            wh.setUpdatedAt(LocalDateTime.now());
+            watchHistoryRepository.save(wh);
 
             return LikeResponse.builder()
                     .liked(true)
