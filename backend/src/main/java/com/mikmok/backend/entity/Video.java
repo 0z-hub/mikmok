@@ -18,6 +18,9 @@ public class Video {
     @Column(nullable = false)
     private String title;
 
+    @Column(length = 255)
+    private String description;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String videoUrl;
 
