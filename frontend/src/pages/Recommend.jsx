@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { message } from 'antd'
 import {
   HeartOutlined,
@@ -11,10 +11,18 @@ import './Recommend.css'
 
 const PAGE_SIZE = 10
 
+function mergeStartVideo(startVideo, list) {
+  if (!startVideo) return list
+  return [startVideo, ...list.filter((v) => v.id !== startVideo.id)]
+}
+
 export default function Recommend() {
   const navigate = useNavigate()
+  const location = useLocation()
   const containerRef = useRef(null)
   const videoRefs = useRef({})
+  const pendingStartVideo = useRef(location.state?.startVideo ?? null)
+  const pendingPlayId = useRef(null)
 
   const [videos, setVideos] = useState([])
   const [page, setPage] = useState(1)
@@ -22,6 +30,12 @@ export default function Recommend() {
   const [hasMore, setHasMore] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loadError, setLoadError] = useState(false)
+
+  useEffect(() => {
+    if (location.state?.startVideo) {
+      navigate('.', { replace: true, state: null })
+    }
+  }, [location.state, navigate])
 
   // 获取视频列表
   const fetchVideos = useCallback(async (pageNum) => {
@@ -37,12 +51,26 @@ export default function Recommend() {
         setHasMore(false)
       }
       if (pageNum === 1) {
-        setVideos(newVideos)
+        const startVideo = pendingStartVideo.current
+        const merged = mergeStartVideo(startVideo, newVideos)
+        if (startVideo) {
+          pendingStartVideo.current = null
+          pendingPlayId.current = startVideo.id
+        }
+        setVideos(merged)
       } else {
         setVideos((prev) => [...prev, ...newVideos])
       }
     } catch (error) {
-      setLoadError(true)
+      if (pageNum === 1 && pendingStartVideo.current) {
+        const startVideo = pendingStartVideo.current
+        pendingStartVideo.current = null
+        pendingPlayId.current = startVideo.id
+        setVideos([startVideo])
+        setHasMore(false)
+      } else {
+        setLoadError(true)
+      }
       // 错误由请求拦截器统一处理
     } finally {
       setLoading(false)
@@ -114,6 +142,27 @@ export default function Recommend() {
     }
   }
 
+  useEffect(() => {
+    if (!pendingPlayId.current || videos.length === 0) return
+
+    const playId = pendingPlayId.current
+    pendingPlayId.current = null
+    setCurrentIndex(0)
+
+    const container = containerRef.current
+    if (container) {
+      container.scrollTop = 0
+    }
+
+    requestAnimationFrame(() => {
+      const currentVideo = videoRefs.current[playId]
+      if (currentVideo) {
+        currentVideo.currentTime = 0
+        currentVideo.play().catch(() => {})
+      }
+    })
+  }, [videos])
+
   // 模拟数据兜底
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -138,8 +187,14 @@ export default function Recommend() {
           isLiked: true,
         },
       ]
+      const startVideo = pendingStartVideo.current
+      const merged = mergeStartVideo(startVideo, mockVideos)
+      if (startVideo) {
+        pendingStartVideo.current = null
+        pendingPlayId.current = startVideo.id
+      }
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setVideos(mockVideos)
+      setVideos(merged)
       setHasMore(false)
     }
   }, [videos.length, loading])

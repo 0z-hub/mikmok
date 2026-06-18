@@ -5,7 +5,8 @@ import {
   HeartFilled,
   DeleteOutlined,
   ClockCircleOutlined,
-  UserOutlined
+  UserOutlined,
+  PlayCircleFilled,
 } from '@ant-design/icons'
 import request from '../utils/request'
 
@@ -70,6 +71,26 @@ export default function Manage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
 
+  const handleWatch = (video) => {
+    if (!video.videoUrl) {
+      message.warning('该视频暂无可播放地址')
+      return
+    }
+    navigate('/recommend', {
+      state: {
+        startVideo: {
+          id: video.id,
+          title: video.title,
+          description: video.description || '',
+          videoUrl: video.videoUrl,
+          authorName: username,
+          likeCount: video.likeCount ?? 0,
+          isLiked: false,
+        },
+      },
+    })
+  }
+
   const handleDelete = async (videoId) => {
     try {
       await request.delete(`/api/my/videos/${videoId}`)
@@ -123,26 +144,41 @@ export default function Manage() {
             {list.map((video) => (
               <div key={video.id} className="bg-card-bg rounded-xl overflow-hidden border border-white/5 flex p-3 shadow-lg">
                 {/* 左侧缩略图 */}
-                <div className="relative w-28 h-20 shrink-0 bg-black rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  className="relative w-28 h-20 shrink-0 bg-black rounded-lg overflow-hidden cursor-pointer group"
+                  onClick={() => handleWatch(video)}
+                  aria-label={`预览视频：${video.title}`}
+                >
                   {video.videoUrl ? (
                     <video
                       src={video.videoUrl}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover pointer-events-none"
                       preload="metadata"
+                      muted
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white/10">
                       <span className="text-2xl">🎬</span>
                     </div>
                   )}
-                </div>
+                  {video.videoUrl && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <PlayCircleFilled className="text-2xl text-white/90" />
+                    </div>
+                  )}
+                </button>
 
                 {/* 右侧内容信息 */}
                 <div className="ml-3 flex-1 flex flex-col justify-between min-w-0">
                   <div>
-                    <div className="text-white font-medium text-sm line-clamp-1 mb-1">
+                    <button
+                      type="button"
+                      className="text-white font-medium text-sm line-clamp-1 mb-1 text-left w-full hover:text-primary transition-colors cursor-pointer"
+                      onClick={() => handleWatch(video)}
+                    >
                       {video.title}
-                    </div>
+                    </button>
                     <div className="flex items-center space-x-3 text-[10px] text-white/40">
                       <span className="flex items-center">
                         <ClockCircleOutlined className="mr-1" />
