@@ -40,7 +40,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
-    public Video uploadVideo(Long userId, String title, MultipartFile file) {
+    public Video uploadVideo(Long userId, String title, String description, MultipartFile file) {
         try {
             // 计算 MD5
             String md5 = DigestUtils.md5DigestAsHex(file.getInputStream());
@@ -48,6 +48,7 @@ public class VideoServiceImpl implements VideoService {
             Video video = new Video();
             video.setUserId(userId);
             video.setTitle(title);
+            video.setDescription(description);
             video.setMd5(md5);
             video.setFileSize(file.getSize());
             video.setContentType(file.getContentType());
@@ -220,6 +221,7 @@ public class VideoServiceImpl implements VideoService {
             return VideoVo.builder()
                     .id(v.getId())
                     .title(v.getTitle())
+                    .description(v.getDescription())
                     .videoUrl(v.getVideoUrl())
                     .authorName(authorName)
                     .likeCount(v.getLikeCount().longValue())
