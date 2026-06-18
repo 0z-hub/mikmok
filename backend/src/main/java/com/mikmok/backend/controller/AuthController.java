@@ -35,7 +35,7 @@ public class AuthController {
         LoginResponse response = LoginResponse.builder()
                 .token(token)
                 .username(user.getUsername())
-                .role("USER") // 目前默认为 USER，后续可扩展
+                .role(user.getRole() != null ? user.getRole() : "USER")
                 .build();
 
         return Result.success("登录成功", response);

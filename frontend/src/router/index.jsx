@@ -3,6 +3,7 @@ import Login from '../pages/Login'
 import Manage from '../pages/Manage'
 import Publish from '../pages/Publish'
 import Recommend from '../pages/Recommend'
+import Admin from '../pages/Admin'
 import MainLayout from '../layouts/MainLayout'
 
 const router = createBrowserRouter([
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: 'publish',
         element: <Publish />,
+      },
+      {
+        path: 'admin',
+        element: <Admin />,
       },
     ],
   },

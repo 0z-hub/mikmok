@@ -24,6 +24,7 @@ public class AuthService {
         User user = User.builder()
                 .username(username)
                 .password(passwordEncoder.encode(password))
+                .role("USER")
                 .build();
         userRepository.save(user);
         return "注册成功";
@@ -35,6 +36,10 @@ public class AuthService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("密码错误");
         }
-        return jwtUtils.generateToken(user.getUsername(), user.getId());
+        return jwtUtils.generateToken(user.getUsername(), user.getId(), resolveRole(user));
+    }
+
+    private String resolveRole(User user) {
+        return user.getRole() != null ? user.getRole() : "USER";
     }
 }
