@@ -11,6 +11,7 @@ import java.util.List;
 public interface VideoService {
     Video uploadVideo(Long userId, String title, String description, MultipartFile file);
     Page<Video> getMyVideos(Long userId, int page, int size);
+    Video updateVideo(Long userId, Long videoId, String title, String description);
     void deleteVideo(Long userId, Long videoId);
 
     /**

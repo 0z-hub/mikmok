@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Empty, Popconfirm, message } from 'antd'
+import { Button, Empty, Form, Input, Modal, Popconfirm, message } from 'antd'
 import {
   HeartFilled,
   DeleteOutlined,
+  EditOutlined,
   ClockCircleOutlined,
   UserOutlined,
   PlayCircleFilled,
@@ -36,10 +37,13 @@ function formatTime(time) {
 
 export default function Manage() {
   const navigate = useNavigate()
+  const [form] = Form.useForm()
   const [list, setList] = useState([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [editingVideo, setEditingVideo] = useState(null)
+  const [editSubmitting, setEditSubmitting] = useState(false)
   const username = localStorage.getItem('username') || '用户'
 
   const fetchList = useCallback(async (currentPage) => {
@@ -104,6 +108,54 @@ export default function Manage() {
       }
     } catch {
       // 错误信息由 request 拦截器统一处理
+    }
+  }
+
+  const handleEditOpen = (video) => {
+    setEditingVideo(video)
+    form.setFieldsValue({
+      title: video.title,
+      description: video.description || '',
+    })
+  }
+
+  const handleEditClose = () => {
+    setEditingVideo(null)
+    form.resetFields()
+  }
+
+  const handleEditSubmit = async (values) => {
+    if (!editingVideo) return
+
+    setEditSubmitting(true)
+    try {
+      if (localStorage.getItem('token') === MOCK_DEBUG_TOKEN) {
+        setList((prev) =>
+          prev.map((v) =>
+            v.id === editingVideo.id
+              ? { ...v, title: values.title, description: values.description || '' }
+              : v,
+          ),
+        )
+        message.success('修改成功')
+        handleEditClose()
+        return
+      }
+
+      const res = await request.put(`/api/my/videos/${editingVideo.id}`, {
+        title: values.title,
+        description: values.description || '',
+      })
+      const updated = res.data
+      setList((prev) =>
+        prev.map((v) => (v.id === editingVideo.id ? { ...v, ...updated } : v)),
+      )
+      message.success('修改成功')
+      handleEditClose()
+    } catch {
+      // 错误信息由 request 拦截器统一处理
+    } finally {
+      setEditSubmitting(false)
     }
   }
 
@@ -191,7 +243,16 @@ export default function Manage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<EditOutlined />}
+                      className="h-7 px-2 text-xs text-white/60 hover:text-white hover:bg-white/10 rounded-md"
+                      onClick={() => handleEditOpen(video)}
+                    >
+                      编辑
+                    </Button>
                     <Popconfirm
                       title="确定删除该视频吗？"
                       okText="确定"
@@ -248,6 +309,102 @@ export default function Manage() {
           </div>
         )}
       </div>
+
+      <Modal
+        title="编辑作品"
+        open={!!editingVideo}
+        onCancel={handleEditClose}
+        footer={null}
+        destroyOnHidden
+        className="edit-video-modal"
+        styles={{
+          content: { background: '#161823', padding: 0 },
+          header: { background: '#161823', borderBottom: '1px solid rgba(255,255,255,0.1)' },
+          body: { background: '#161823', padding: '20px 24px 24px' },
+        }}
+      >
+        <Form form={form} layout="vertical" onFinish={handleEditSubmit} requiredMark={false}>
+          <div className="bg-black/30 rounded-xl p-4 border border-white/10 space-y-4">
+            <Form.Item
+              label={<span className="text-white/60 text-xs">视频标题</span>}
+              name="title"
+              rules={[
+                { required: true, message: '请输入视频标题' },
+                { max: 100, message: '标题不能超过 100 字' },
+              ]}
+              className="mb-0"
+            >
+              <Input
+                placeholder="视频标题"
+                maxLength={100}
+                className="edit-video-input"
+              />
+            </Form.Item>
+            <Form.Item
+              label={<span className="text-white/60 text-xs">视频描述（可选）</span>}
+              name="description"
+              rules={[{ max: 100, message: '描述不能超过 100 字' }]}
+              className="mb-0"
+            >
+              <Input.TextArea
+                rows={3}
+                showCount
+                maxLength={100}
+                placeholder="添加更多细节描述..."
+                className="edit-video-textarea"
+              />
+            </Form.Item>
+          </div>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button onClick={handleEditClose} className="!bg-white/10 !border-white/10 !text-white">
+              取消
+            </Button>
+            <Button type="primary" htmlType="submit" loading={editSubmitting}>
+              保存
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .edit-video-modal .ant-modal-title { color: #fff !important; }
+        .edit-video-modal .ant-modal-close { color: rgba(255,255,255,0.45) !important; }
+        .edit-video-modal .ant-modal-close:hover { color: #fff !important; }
+        .edit-video-modal .edit-video-input,
+        .edit-video-modal .edit-video-input input {
+          color: #fff !important;
+          background: transparent !important;
+          border: none !important;
+          border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+        .edit-video-modal .edit-video-input input::placeholder {
+          color: rgba(255,255,255,0.25) !important;
+        }
+        .edit-video-modal .edit-video-input input:focus {
+          border-bottom-color: #FE2C55 !important;
+        }
+        .edit-video-modal .edit-video-textarea,
+        .edit-video-modal .edit-video-textarea textarea {
+          color: #fff !important;
+          background: rgba(0,0,0,0.25) !important;
+          border: 1px solid rgba(255,255,255,0.15) !important;
+          border-radius: 8px !important;
+          box-shadow: none !important;
+        }
+        .edit-video-modal .edit-video-textarea textarea::placeholder {
+          color: rgba(255,255,255,0.25) !important;
+        }
+        .edit-video-modal .edit-video-textarea textarea:focus {
+          border-color: #FE2C55 !important;
+        }
+        .edit-video-modal .ant-input-textarea-show-count::after {
+          color: rgba(255,255,255,0.35) !important;
+        }
+      `}} />
     </div>
   )
 }

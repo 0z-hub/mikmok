@@ -2,6 +2,7 @@ package com.mikmok.backend.controller;
 
 import com.mikmok.backend.common.Result;
 import com.mikmok.backend.dto.PageResult;
+import com.mikmok.backend.dto.UpdateVideoRequest;
 import com.mikmok.backend.dto.VideoVo;
 import com.mikmok.backend.entity.User;
 import com.mikmok.backend.entity.Video;
@@ -61,6 +62,29 @@ public class MyVideoController {
         ).collect(Collectors.toList());
 
         return Result.success(PageResult.of(videos.getTotalElements(), voList));
+    }
+
+    @PutMapping("/{id}")
+    public Result<VideoVo> update(@PathVariable Long id, @RequestBody UpdateVideoRequest request) {
+        Long userId = getCurrentUserId();
+        Video video = videoService.updateVideo(userId, id, request.getTitle(), request.getDescription());
+
+        User user = userRepository.findById(userId).orElseThrow();
+
+        VideoVo vo = VideoVo.builder()
+                .id(video.getId())
+                .title(video.getTitle())
+                .description(video.getDescription())
+                .videoUrl(video.getVideoUrl())
+                .authorName(user.getUsername())
+                .likeCount(video.getLikeCount().longValue())
+                .isLiked(false)
+                .fileSize(video.getFileSize())
+                .contentType(video.getContentType())
+                .createdAt(video.getCreatedAt())
+                .build();
+
+        return Result.success("更新成功", vo);
     }
 
     @DeleteMapping("/{id}")

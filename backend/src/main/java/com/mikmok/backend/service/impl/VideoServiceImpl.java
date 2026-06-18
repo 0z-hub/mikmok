@@ -95,6 +95,31 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional
+    public Video updateVideo(Long userId, Long videoId, String title, String description) {
+        if (title == null || title.isBlank()) {
+            throw new RuntimeException("视频标题不能为空");
+        }
+        if (title.length() > 100) {
+            throw new RuntimeException("视频标题不能超过 100 字");
+        }
+        if (description != null && description.length() > 100) {
+            throw new RuntimeException("视频描述不能超过 100 字");
+        }
+
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new RuntimeException("Video not found"));
+
+        if (!video.getUserId().equals(userId)) {
+            throw new RuntimeException("Forbidden: You don't have permission to update this video");
+        }
+
+        video.setTitle(title.trim());
+        video.setDescription(description == null || description.isBlank() ? null : description.trim());
+        return videoRepository.save(video);
+    }
+
+    @Override
+    @Transactional
     public void deleteVideo(Long userId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new RuntimeException("Video not found"));

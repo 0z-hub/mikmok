@@ -68,7 +68,7 @@ public class VideoServiceTest {
             return video;
         });
 
-        Video result = videoService.uploadVideo(1L, "Test Title", mockFile);
+        Video result = videoService.uploadVideo(1L, "Test Title", null, mockFile);
 
         assertNotNull(result);
         assertEquals("Test Title", result.getTitle());
@@ -92,12 +92,32 @@ public class VideoServiceTest {
             return video;
         });
 
-        Video result = videoService.uploadVideo(1L, "Second Title", mockFile);
+        Video result = videoService.uploadVideo(1L, "Second Title", null, mockFile);
 
         assertNotNull(result);
         assertEquals("http://minio/videos/existing.mp4", result.getVideoUrl());
         verify(fileStorageService, never()).upload(anyString(), any(), anyString());
         verify(videoRepository, times(1)).save(any(Video.class));
+    }
+
+    @Test
+    void updateVideo_Owner_ShouldUpdateTitleAndDescription() {
+        Video video = new Video();
+        video.setId(100L);
+        video.setUserId(1L);
+        video.setTitle("Old Title");
+        video.setDescription("Old desc");
+        video.setCreatedAt(java.time.LocalDateTime.of(2026, 6, 1, 10, 0));
+
+        when(videoRepository.findById(100L)).thenReturn(Optional.of(video));
+        when(videoRepository.save(any(Video.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Video result = videoService.updateVideo(1L, 100L, "New Title", "New desc");
+
+        assertEquals("New Title", result.getTitle());
+        assertEquals("New desc", result.getDescription());
+        assertEquals(java.time.LocalDateTime.of(2026, 6, 1, 10, 0), result.getCreatedAt());
+        verify(videoRepository, times(1)).save(video);
     }
 
     @Test
