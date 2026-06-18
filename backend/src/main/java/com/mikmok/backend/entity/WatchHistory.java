@@ -20,6 +20,12 @@ public class WatchHistory {
     @Column(name = "video_id", nullable = false)
     private Long videoId;
 
+    @Column(name = "is_liked", nullable = false)
+    private Boolean isLiked = false;
+
     @Column(name = "watched_at", nullable = false)
     private LocalDateTime watchedAt = LocalDateTime.now();
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }
