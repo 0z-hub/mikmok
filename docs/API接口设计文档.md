@@ -126,7 +126,7 @@
 *   **请求参数**:
     | 字段 | 类型 | 必填 | 说明 |
     | :--- | :--- | :--- | :--- |
-    | file | File | 是 | 视频文件 (mp4/mov, max 50MB) |
+    | file | File | 是 | 视频文件 (mp4/mov, max 150MB) |
     | title | String | 是 | 视频标题 (max 100字) |
 *   **响应结果 (201 Created)**:
     ```json

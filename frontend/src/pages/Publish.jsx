@@ -4,7 +4,7 @@ import { Form, Input, Upload, Button, message } from 'antd'
 import { InboxOutlined, CloudUploadOutlined, CheckCircleFilled } from '@ant-design/icons'
 import request from '../utils/request'
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024
+const MAX_FILE_SIZE = 150 * 1024 * 1024
 const MOCK_DEBUG_TOKEN = 'mock-token-for-debug'
 
 export default function Publish() {
@@ -15,7 +15,7 @@ export default function Publish() {
 
   const beforeUpload = (file) => {
     if (file.size > MAX_FILE_SIZE) {
-      message.error('视频文件不能超过 50MB')
+      message.error('视频文件不能超过 150MB')
       return Upload.LIST_IGNORE
     }
     return false
@@ -23,6 +23,12 @@ export default function Publish() {
 
   const handleChange = ({ fileList: newFileList }) => {
     setFileList(newFileList)
+    // 如果上传了文件且标题为空，则自动填充文件名（不含后缀）
+    const file = newFileList[0]?.originFileObj
+    if (file && !form.getFieldValue('title')) {
+      const fileName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name
+      form.setFieldsValue({ title: fileName })
+    }
   }
 
   const handleSubmit = async (values) => {
@@ -97,7 +103,7 @@ export default function Publish() {
                     <InboxOutlined className="text-primary text-5xl" />
                   </p>
                   <p className="text-white font-medium text-base mt-4">点击或将视频拖拽到此处</p>
-                  <p className="text-white/40 text-xs mt-2 px-6">支持 MP4, WebM 等格式，大小不超过 50MB</p>
+                  <p className="text-white/40 text-xs mt-2 px-6">支持 MP4, WebM 等格式，大小不超过 150MB</p>
                 </div>
               )}
             </Upload.Dragger>
