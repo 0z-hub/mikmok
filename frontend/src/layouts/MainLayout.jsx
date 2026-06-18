@@ -74,26 +74,30 @@ export default function MainLayout() {
 
   return (
     <div className="flex flex-col h-screen h-[100dvh] bg-black text-white overflow-hidden max-w-[500px] mx-auto border-x border-white/10 shadow-2xl relative">
-      {/* 顶部导航 - 仅在非推荐页显示 */}
-      {!isRecommend && (
-        <header className="flex items-center justify-between px-4 h-12 border-b border-white/10 bg-black/50 backdrop-blur-md shrink-0">
-          <span className="text-lg font-bold tracking-wider text-primary cursor-pointer" onClick={() => navigate('/recommend')}>
-            MikMok{isAdmin ? ' Admin' : ''}
-          </span>
-          <div className="flex items-center space-x-3">
-            <span className="text-sm text-white/80">{username}</span>
-            <button
-              className="text-xs text-white/40 hover:text-white transition-colors"
-              onClick={handleLogout}
-            >
-              退出
-            </button>
-          </div>
-        </header>
+      {/* 全局品牌 Logo */}
+      <div className="absolute top-6 left-6 z-20 pointer-events-none">
+        <span
+          className="text-2xl font-black italic tracking-tighter text-primary drop-shadow-lg cursor-pointer pointer-events-auto"
+          onClick={() => navigate('/recommend')}
+        >
+          MikMok{isAdmin ? ' Admin' : ''}
+        </span>
+      </div>
+
+      {/* 退出按钮 - 仅在“我的”页面浮动在右上角 */}
+      {location.pathname.startsWith('/manage') && (
+        <div className="absolute top-6 right-6 z-20 flex items-center drop-shadow-md">
+          <button
+            className="text-xs text-white/40 hover:text-white transition-colors bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5"
+            onClick={handleLogout}
+          >
+            退出
+          </button>
+        </div>
       )}
 
       {/* 内容区 */}
-      <main className="flex-1 overflow-y-auto no-scrollbar relative">
+      <main className={`flex-1 overflow-y-auto no-scrollbar relative ${!isRecommend ? 'pt-20' : ''}`}>
         <Outlet />
       </main>
 
@@ -111,10 +115,10 @@ export default function MainLayout() {
               }`}
               onClick={() => handleTabClick(item.key)}
             >
-              <span className={`text-2xl ${isPublish ? 'text-3xl text-white' : ''}`}>
+              <span className={`text-2xl ${isPublish ? 'text-white' : ''}`}>
                 {item.icon}
               </span>
-              {!isPublish && <span className="text-[10px] mt-1 font-medium">{item.label}</span>}
+              <span className="text-[10px] mt-1 font-medium">{item.label}</span>
             </div>
           )
         })}

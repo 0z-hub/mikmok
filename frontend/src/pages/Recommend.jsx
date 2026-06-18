@@ -174,7 +174,7 @@ export default function Recommend() {
         </div>
 
         {/* 右侧操作栏 */}
-        <div className="absolute right-4 bottom-32 flex flex-col items-center space-y-6 z-10">
+        <div className="absolute right-4 bottom-48 flex flex-col items-center space-y-6 z-10">
           <div className="flex flex-col items-center group" onClick={(e) => handleLike(video.id, e)}>
             <div className={`w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center transition-all active:scale-75 ${video.isLiked ? 'text-primary' : 'text-white'}`}>
               {video.isLiked ? <HeartFilled className="text-2xl" /> : <HeartOutlined className="text-2xl" />}
@@ -182,12 +182,6 @@ export default function Recommend() {
             <span className="text-xs mt-1 font-bold drop-shadow-md">{video.likeCount ?? 0}</span>
           </div>
 
-          <div className="flex flex-col items-center" onClick={() => navigate('/publish')}>
-            <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white active:scale-75 transition-all">
-              <PlusCircleFilled className="text-2xl" />
-            </div>
-            <span className="text-xs mt-1 font-bold drop-shadow-md">发布</span>
-          </div>
         </div>
 
         {/* 底部信息区 */}
@@ -203,13 +197,6 @@ export default function Recommend() {
             </div>
           </div>
         </div>
-
-        {/* 顶部品牌 Logo (仅在第一个视频显示或常驻) */}
-        {isActive && (
-          <div className="absolute top-6 left-6 z-20">
-            <span className="text-2xl font-black italic tracking-tighter text-primary drop-shadow-lg">MikMok</span>
-          </div>
-        )}
       </div>
     )
   }
